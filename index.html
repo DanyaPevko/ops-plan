@@ -41,7 +41,8 @@
         .modal-content h3 { color: #ff6600 !important; margin-top: 0; }
         .modal-content p, .modal-content label { color: #ccc !important; }
         .modal-content input { background: #121212 !important; color: #fff !important; border: 1px solid #444 !important; }
-                /* --- ТЕМНАЯ ТЕМА РАБОЧЕЙ ОБЛАСТИ (ПРОЕКТА) В СТИЛЕ "ЗОВ" --- */
+        
+        /* --- ТЕМНАЯ ТЕМА РАБОЧЕЙ ОБЛАСТИ (ПРОЕКТА) В СТИЛЕ "ЗОВ" --- */
         #workspace { background: #121212 !important; }
         #top-toolbar { background: #1a1a1a !important; border-bottom: 1px solid #333 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important; }
         .submenu { background: #222222 !important; border: 1px solid #3a3a3a !important; border-left: 3px solid #ff6600 !important; border-radius: 8px; padding: 6px !important; margin-top: 6px; }
@@ -79,10 +80,13 @@
         #tourCard { position: fixed; left: 5%; width: 90%; background: #1e1e1e; border: 2px solid #ff6600; border-radius: 12px; padding: 15px; color: #fff; z-index: 100002; box-shadow: 0 10px 30px rgba(0,0,0,0.9); box-sizing: border-box; transition: all 0.35s ease; }
         .help-section { background: #151515; border-left: 3px solid #ff6600; padding: 10px; border-radius: 6px; margin-bottom: 10px; text-align: left; font-size: 13px; line-height: 1.4; color: #ddd; }
         .help-section b { color: #ff6600; font-size: 14px; display: block; margin-bottom: 4px; }
+
+        /* --- СТИЛИ ПЛАШКИ ПОДСКАЗОК --- */
+        #coachHint { display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(30,30,30,0.95); border: 2px solid #ff6600; border-radius: 12px; padding: 10px 15px; color: #fff; font-size: 14px; z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.7); max-width: 85%; text-align: center; align-items: center; gap: 10px; }
     </style>
 </head>
-<body>
-    <div id="splash-screen">
+<body>    
+<div id="splash-screen">
     <div class="splash-logo-wrapper">
         <img src="10882.png" onerror="this.onerror=null; this.src='10882.jpg';" alt="ЗОВ">
     </div>
@@ -173,6 +177,12 @@
         <div id="canvas-wrapper"><canvas id="planCanvas"></canvas></div>
     </div>
     
+    <!-- ПЛАШКА ПОДСКАЗОК РЕЖИМА НОВИЧКА -->
+    <div id="coachHint">
+        <span id="coachHintText" style="flex: 1;">🧱 Нарисуйте стену</span>
+        <button id="coachHintSkip" style="background: transparent; border: 1px solid #ff6600; color: #ff6600; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer;">Пропустить</button>
+    </div>
+    
     <div id="bottom-toolbar-wrapper">
         <div id="bottom-toolbar-main" style="display: flex; justify-content: space-between; padding: 10px; gap: 10px;">
             <div class="tool-btn action-btn" id="homeBtn" style="flex: 1;">🏠 В меню</div>
@@ -193,7 +203,6 @@
 <div id="estimateModal" class="modal-overlay"><div class="modal-content" style="max-height: 85vh; overflow-y: auto;"><h3 style="margin-bottom: 5px;">📊 Смета проекта</h3><p style="font-size: 12px; margin-top: 0;">(На основе 1 м = <span id="scaleDisplay">50</span> px)</p><div style="text-align: left; margin-top: 10px; background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444;"><label style="font-size: 14px; font-weight: bold;">Длина кабель-канала (с дальномера):</label><div style="display: flex; gap: 5px; margin-top: 5px;"><input type="number" id="calcChannel" value="0" style="flex: 1; padding: 8px; border-radius: 5px; font-size: 16px;"><span style="padding: 8px;">м</span></div></div><div id="estimateContent" style="text-align: left; font-size: 14px; color: #eee; margin: 15px 0; padding: 10px; background: #121212; border-radius: 8px; border: 1px solid #333; min-height: 100px;"></div><button class="tool-btn action-btn warning" id="closeEstimateBtn" style="width: 100%;">Закрыть смету</button></div></div>
 <div id="statusModal" class="modal-overlay"><div class="modal-content"><h3>Папка проекта</h3><div class="modal-buttons" style="flex-direction: column; gap: 10px;"><button class="tool-btn action-btn" onclick="confirmStatusChange('active')">В работе</button><button class="tool-btn action-btn warning" onclick="confirmStatusChange('done')">Сдано</button><button class="tool-btn action-btn danger" onclick="confirmStatusChange('archive')">Архив</button></div><button class="tool-btn" id="closeStatusModalBtn" style="margin-top: 15px;">Отмена</button></div></div>
 <div id="settingsModal" class="modal-overlay"><div class="modal-content"><h3>Настройки</h3><div style="text-align: left; margin-top: 10px;"><label style="font-size: 14px;">Стандартный масштаб (пикселей в 1 метре):</label><input type="number" id="settingsScaleInput" value="50" style="width: 90%; padding: 10px; margin-top: 5px; border-radius: 5px;"></div><button class="tool-btn action-btn warning" id="saveSettingsBtn" style="margin-top: 20px; width: 100%;">Сохранить</button><button class="tool-btn" id="closeSettingsBtn" style="margin-top: 10px; width: 100%;">Отмена</button></div></div>
-
 <!-- НОВОЕ: Справочник инженера -->
 <div id="helpModal" class="modal-overlay">
     <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
@@ -222,6 +231,9 @@
     </div>
 </div>
 
-<script src="data.js"></script><script src="draw.js"></script><script src="ui.js"></script><script src="events.js"></script>
+<script src="data.js"></script>
+<script src="draw.js"></script>
+<script src="ui.js"></script>
+<script src="events.js"></script>
 </body>
 </html>
