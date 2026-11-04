@@ -530,84 +530,76 @@ function updateCoachHint() {
     if (!hintEl || !textEl) return;
     
     const step = getCoachStep();
+    
+    // Сбрасываем всё в исходное (разблокировано, ярко)
+    document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
+    document.querySelectorAll('.submenu').forEach(sub => { sub.style.opacity = '1'; sub.style.display = ''; sub.classList.remove('show'); });
+    
     if (!step) { 
         hintEl.style.display = 'none'; 
-        document.querySelectorAll('.main-tool, .sub-btn, .submenu').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }); 
         return; 
     }
     
     hintEl.style.display = 'flex';
     textEl.innerText = step.text;
+    document.getElementById('coachHintSkip').innerText = step.tool === 'rotate' ? 'Понятно' : 'Пропустить';
     
-    // Сброс стилей для всех
+    // Сначала всех тускло и без кликов
     document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '0.2'; btn.style.pointerEvents = 'none'; });
     document.querySelectorAll('.submenu').forEach(sub => { sub.style.opacity = '0.2'; });
     
-    // Подсветка шага
+    // Помощник: подсветить и разрешить клик
+    function activate(el) { if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; } }
+    
     if (step.tool === 'wall') {
-        const b = document.querySelector('.main-tool[data-tool="wall"]');
-        if (b) { b.style.opacity = '1'; b.style.pointerEvents = 'auto'; }
+        activate(document.querySelector('.main-tool[data-tool="wall"]'));
     } 
     else if (step.tool === 'opening') {
-        const b = document.querySelector('.main-tool[data-group="opening"]');
-        if (b) { b.style.opacity = '1'; b.style.pointerEvents = 'auto'; }
+        activate(document.querySelector('.main-tool[data-group="opening"]'));
+        // Открываем подменю проемов
         const sub = document.getElementById('sub-opening');
-        if (sub) { sub.style.opacity = '1'; sub.style.display = 'flex'; }
-        const door = document.querySelector('#sub-opening .sub-btn[data-tool="door"]');
-        if (door) { door.style.opacity = '1'; door.style.pointerEvents = 'auto'; }
+        if (sub) { sub.classList.add('show'); sub.style.opacity = '1'; }
+        activate(document.querySelector('#sub-opening .sub-btn[data-tool="door"]'));
     }
     else if (step.tool === 'os_astra512') {
-        const b = document.querySelector('.main-tool[data-group="os"]');
-        if (b) { b.style.opacity = '1'; b.style.pointerEvents = 'auto'; }
-        // Открываем подменю ОС и Датчики
-        document.getElementById('sub-os').style.display = 'flex';
-        document.getElementById('sub-os').style.opacity = '1';
-        const sensorsBtn = document.getElementById('os-menu-sensors');
-        if (sensorsBtn) { sensorsBtn.style.opacity = '1'; sensorsBtn.style.pointerEvents = 'auto'; }
-        // Если уже открыто подменю датчиков — подсветить Астру
+        activate(document.querySelector('.main-tool[data-group="os"]'));
+        
+        // Открываем меню ОС
+        const subOs = document.getElementById('sub-os');
+        if (subOs) { subOs.classList.add('show'); subOs.style.opacity = '1'; }
+        activate(document.getElementById('os-menu-sensors'));
+        
+        // Открываем меню датчиков
         const subSensors = document.getElementById('sub-os-sensors');
-        if (subSensors && subSensors.classList.contains('show')) {
-            subSensors.style.opacity = '1';
-            const astra = document.querySelector('#sub-os-sensors .sub-btn[data-tool="os_astra512"]');
-            if (astra) { astra.style.opacity = '1'; astra.style.pointerEvents = 'auto'; }
-        }
+        if (subSensors) { subSensors.classList.add('show'); subSensors.style.opacity = '1'; }
+        activate(document.querySelector('#sub-os-sensors .sub-btn[data-tool="os_astra512"]'));
     }
     else if (step.tool === 'cable_kspv8') {
-        const b = document.querySelector('.main-tool[data-group="cable"]');
-        if (b) { b.style.opacity = '1'; b.style.pointerEvents = 'auto'; }
-        document.getElementById('sub-cable').style.display = 'flex';
-        document.getElementById('sub-cable').style.opacity = '1';
-        const osBtn = document.getElementById('cable-menu-os');
-        if (osBtn) { osBtn.style.opacity = '1'; osBtn.style.pointerEvents = 'auto'; }
+        activate(document.querySelector('.main-tool[data-group="cable"]'));
+        
+        const subCable = document.getElementById('sub-cable');
+        if (subCable) { subCable.classList.add('show'); subCable.style.opacity = '1'; }
+        activate(document.getElementById('cable-menu-os'));
+        
         const subCableOs = document.getElementById('sub-cable-os');
-        if (subCableOs && subCableOs.classList.contains('show')) {
-            subCableOs.style.opacity = '1';
-            const cable = document.querySelector('#sub-cable-os .sub-btn[data-tool="cable_kspv8"]');
-            if (cable) { cable.style.opacity = '1'; cable.style.pointerEvents = 'auto'; }
-        }
+        if (subCableOs) { subCableOs.classList.add('show'); subCableOs.style.opacity = '1'; }
+        activate(document.querySelector('#sub-cable-os .sub-btn[data-tool="cable_kspv8"]'));
     }
     else if (step.tool === 'rotate') {
-        // Всё разблокировано, но подсвечиваем панель поворота
+        // Всё разблокировано, подсвечиваем панель поворота
         document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
         const rotPanel = document.getElementById('rotation-controls');
         if (rotPanel) { rotPanel.style.display = 'flex'; rotPanel.style.boxShadow = '0 0 20px #ff6600'; }
-        // Меняем кнопку "Пропустить" на "Понятно"
-        document.getElementById('coachHintSkip').innerText = 'Понятно';
-    } else {
-        document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
     }
 }
 
-// Обработчик кнопки "Пропустить/Понятно"
 document.getElementById('coachHintSkip').addEventListener('click', () => {
     if (!currentProjectId) return;
     const step = getCoachStep();
     if (step && step.tool === 'rotate') {
-        // Если нажали "Понятно" на шаге поворота — завершаем обучение
         localStorage.setItem('ops_coach_rotate_' + currentProjectId, 'true');
         updateCoachHint();
     } else {
-        // Обычный пропуск
         localStorage.setItem('ops_coach_skip_' + currentProjectId, 'true');
         document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
         document.getElementById('coachHint').style.display = 'none';
