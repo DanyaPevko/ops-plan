@@ -489,6 +489,8 @@ document.getElementById('textSaveBtn').addEventListener('click', () => {
 document.getElementById('closeTextModalBtn').addEventListener('click', () => { pendingElement = null; textModal.classList.remove('show'); });
 
 // --- РЕЖИМ НОВИЧКА (ПОШАГОВЫЕ ПОДСКАЗКИ) ---
+let coachStepIndex = 0;
+
 function getCoachStep() {
     if (!currentProjectId) return null;
     if (localStorage.getItem('ops_coach_skip_' + currentProjectId)) return null;
@@ -502,39 +504,112 @@ function getCoachStep() {
         if (!el.isLine && el.category && el.category !== 'wall' && el.category !== 'opening' && el.category !== 'ruler' && el.category !== 'text') hasDevice = true;
     });
     
-    if (!hasWall) return { text: '🧱 Нарисуйте стену', tool: 'wall' };
-    if (!hasOpening) return { text: '🚪 Добавьте дверь или окно', tool: 'door' };
-    if (!hasDevice) return { text: '🛡️ Поставьте датчик', tool: 'os_astra512' };
-    if (!hasCable) return { text: '⚡ Проложите кабель к датчику', tool: 'cable_kspv8' };
+    // Шаг 1: Стена
+    if (!hasWall) return { text: '🧱 Шаг 1: Нарисуйте стену', tool: 'wall' };
+    
+    // Шаг 2: Проем
+    if (!hasOpening) return { text: '🚪 Шаг 2: Нажмите «Проем» и выберите «Дверь»', tool: 'opening' };
+    
+    // Шаг 3: Датчик ОС (Датчики -> Астра 512)
+    if (!hasDevice) return { text: '🛡️ Шаг 3: Нажмите «ОС», затем «Датчики» и выберите «Астра 512»', tool: 'os_astra512' };
+    
+    // Шаг 4: Кабель
+    if (!hasCable) return { text: '⚡ Шаг 4: Нажмите «Кабель», выберите тип и проведите линию от датчика', tool: 'cable_kspv8' };
+    
+    // Шаг 5: Направление (появляется панель поворота)
+    if (!localStorage.getItem('ops_coach_rotate_' + currentProjectId)) {
+        return { text: '🔄 Шаг 5: Выберите направление датчика (панель внизу) и нажмите «Понятно»', tool: 'rotate', isFinal: true };
+    }
     
     localStorage.setItem('ops_coach_done_' + currentProjectId, 'true');
     return { text: '🎉 Готово! Вы освоили основы. Нажмите ❓ для справки.', tool: null };
 }
-
 function updateCoachHint() {
     const hintEl = document.getElementById('coachHint');
     const textEl = document.getElementById('coachHintText');
     if (!hintEl || !textEl) return;
     
     const step = getCoachStep();
-    if (!step) { hintEl.style.display = 'none'; document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; }); return; }
+    if (!step) { 
+        hintEl.style.display = 'none'; 
+        document.querySelectorAll('.main-tool, .sub-btn, .submenu').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }); 
+        return; 
+    }
     
     hintEl.style.display = 'flex';
     textEl.innerText = step.text;
     
-    document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '0.35'; });
-    if (step.tool) {
-        if (step.tool === 'wall') { const b = document.querySelector('.main-tool[data-tool="wall"]'); if (b) b.style.opacity = '1'; }
-        else if (step.tool === 'door') { const b = document.querySelector('.main-tool[data-group="opening"]'); if (b) b.style.opacity = '1'; }
-        else if (step.tool === 'os_astra512') { const b = document.querySelector('.main-tool[data-group="os"]'); if (b) b.style.opacity = '1'; }
-        else if (step.tool === 'cable_kspv8') { const b = document.querySelector('.main-tool[data-group="cable"]'); if (b) b.style.opacity = '1'; }
+    // Сброс стилей для всех
+    document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '0.2'; btn.style.pointerEvents = 'none'; });
+    document.querySelectorAll('.submenu').forEach(sub => { sub.style.opacity = '0.2'; });
+    
+    // Подсветка шага
+    if (step.tool === 'wall') {
+        const b = document.querySelector('.main-tool[data-tool="wall"]');
+        if (b) { b.style.opacity = '1'; b.style.pointerEvents = 'auto'; }
+    } 
+    else if (step.tool === 'opening') {
+        const b = document.querySelector('.main-tool[data-group="opening"]');
+        if (b) { b.style.opacity = '1'; b.style.pointerEvents = 'auto'; }
+        const sub = document.getElementById('sub-opening');
+        if (sub) { sub.style.opacity = '1'; sub.style.display = 'flex'; }
+        const door = document.querySelector('#sub-opening .sub-btn[data-tool="door"]');
+        if (door) { door.style.opacity = '1'; door.style.pointerEvents = 'auto'; }
+    }
+    else if (step.tool === 'os_astra512') {
+        const b = document.querySelector('.main-tool[data-group="os"]');
+        if (b) { b.style.opacity = '1'; b.style.pointerEvents = 'auto'; }
+        // Открываем подменю ОС и Датчики
+        document.getElementById('sub-os').style.display = 'flex';
+        document.getElementById('sub-os').style.opacity = '1';
+        const sensorsBtn = document.getElementById('os-menu-sensors');
+        if (sensorsBtn) { sensorsBtn.style.opacity = '1'; sensorsBtn.style.pointerEvents = 'auto'; }
+        // Если уже открыто подменю датчиков — подсветить Астру
+        const subSensors = document.getElementById('sub-os-sensors');
+        if (subSensors && subSensors.classList.contains('show')) {
+            subSensors.style.opacity = '1';
+            const astra = document.querySelector('#sub-os-sensors .sub-btn[data-tool="os_astra512"]');
+            if (astra) { astra.style.opacity = '1'; astra.style.pointerEvents = 'auto'; }
+        }
+    }
+    else if (step.tool === 'cable_kspv8') {
+        const b = document.querySelector('.main-tool[data-group="cable"]');
+        if (b) { b.style.opacity = '1'; b.style.pointerEvents = 'auto'; }
+        document.getElementById('sub-cable').style.display = 'flex';
+        document.getElementById('sub-cable').style.opacity = '1';
+        const osBtn = document.getElementById('cable-menu-os');
+        if (osBtn) { osBtn.style.opacity = '1'; osBtn.style.pointerEvents = 'auto'; }
+        const subCableOs = document.getElementById('sub-cable-os');
+        if (subCableOs && subCableOs.classList.contains('show')) {
+            subCableOs.style.opacity = '1';
+            const cable = document.querySelector('#sub-cable-os .sub-btn[data-tool="cable_kspv8"]');
+            if (cable) { cable.style.opacity = '1'; cable.style.pointerEvents = 'auto'; }
+        }
+    }
+    else if (step.tool === 'rotate') {
+        // Всё разблокировано, но подсвечиваем панель поворота
+        document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
+        const rotPanel = document.getElementById('rotation-controls');
+        if (rotPanel) { rotPanel.style.display = 'flex'; rotPanel.style.boxShadow = '0 0 20px #ff6600'; }
+        // Меняем кнопку "Пропустить" на "Понятно"
+        document.getElementById('coachHintSkip').innerText = 'Понятно';
     } else {
-        document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; });
+        document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
     }
 }
 
+// Обработчик кнопки "Пропустить/Понятно"
 document.getElementById('coachHintSkip').addEventListener('click', () => {
-    if (currentProjectId) localStorage.setItem('ops_coach_skip_' + currentProjectId, 'true');
-    document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; });
-    document.getElementById('coachHint').style.display = 'none';
+    if (!currentProjectId) return;
+    const step = getCoachStep();
+    if (step && step.tool === 'rotate') {
+        // Если нажали "Понятно" на шаге поворота — завершаем обучение
+        localStorage.setItem('ops_coach_rotate_' + currentProjectId, 'true');
+        updateCoachHint();
+    } else {
+        // Обычный пропуск
+        localStorage.setItem('ops_coach_skip_' + currentProjectId, 'true');
+        document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
+        document.getElementById('coachHint').style.display = 'none';
+    }
 });
