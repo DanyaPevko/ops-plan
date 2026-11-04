@@ -489,37 +489,31 @@ document.getElementById('textSaveBtn').addEventListener('click', () => {
 document.getElementById('closeTextModalBtn').addEventListener('click', () => { pendingElement = null; textModal.classList.remove('show'); });
 
 // --- РЕЖИМ НОВИЧКА (ПОШАГОВЫЕ ПОДСКАЗКИ) ---
-let coachStepIndex = 0;
-
 function getCoachStep() {
     if (!currentProjectId) return null;
     if (localStorage.getItem('ops_coach_skip_' + currentProjectId)) return null;
     if (localStorage.getItem('ops_coach_done_' + currentProjectId)) return null;
     
-    let hasWall = false, hasOpening = false, hasDevice = false, hasCable = false;
+    let hasWall = false, hasOpening = false, hasDevice = false, hasDirection = false, hasCable = false;
     drawnElements.forEach(el => {
         if (el.type === 'wall') hasWall = true;
         if (el.category === 'opening') hasOpening = true;
         if (el.isLine && el.type.startsWith('cable_')) hasCable = true;
-        if (!el.isLine && el.category && el.category !== 'wall' && el.category !== 'opening' && el.category !== 'ruler' && el.category !== 'text') hasDevice = true;
+        if (!el.isLine && el.category && el.category !== 'wall' && el.category !== 'opening' && el.category !== 'ruler' && el.category !== 'text') {
+            hasDevice = true;
+            // Проверяем, поворачивал ли пользователь датчик (angle не 0 или 180)
+            if (el.angle && el.angle % 360 !== 0 && el.angle % 360 !== 180 && el.angle % 360 !== -180) hasDirection = true;
+        }
     });
     
-    // Шаг 1: Стена
     if (!hasWall) return { text: '🧱 Шаг 1: Нарисуйте стену', tool: 'wall' };
-    
-    // Шаг 2: Проем
     if (!hasOpening) return { text: '🚪 Шаг 2: Нажмите «Проем» и выберите «Дверь»', tool: 'opening' };
-    
-    // Шаг 3: Датчик ОС (Датчики -> Астра 512)
     if (!hasDevice) return { text: '🛡️ Шаг 3: Нажмите «ОС», затем «Датчики» и выберите «Астра 512»', tool: 'os_astra512' };
     
-    // Шаг 4: Кабель
-    if (!hasCable) return { text: '⚡ Шаг 4: Нажмите «Кабель», выберите тип и проведите линию от датчика', tool: 'cable_kspv8' };
+    // Шаг 4: Направление датчика (проверяем, есть ли повернутые датчики)
+    if (!hasDirection) return { text: '🔄 Шаг 4: Выберите направление датчика (панель внизу) и нажмите «Понятно»', tool: 'rotate' };
     
-    // Шаг 5: Направление (появляется панель поворота)
-    if (!localStorage.getItem('ops_coach_rotate_' + currentProjectId)) {
-        return { text: '🔄 Шаг 5: Выберите направление датчика (панель внизу) и нажмите «Понятно»', tool: 'rotate', isFinal: true };
-    }
+    if (!hasCable) return { text: '⚡ Шаг 5: Нажмите «Кабель», выберите тип и проведите линию', tool: 'cable_kspv8' };
     
     localStorage.setItem('ops_coach_done_' + currentProjectId, 'true');
     return { text: '🎉 Готово! Вы освоили основы. Нажмите ❓ для справки.', tool: null };
@@ -531,9 +525,9 @@ function updateCoachHint() {
     
     const step = getCoachStep();
     
-    // Сбрасываем всё в исходное (разблокировано, ярко)
+    // Сброс: всё ярко, кликабельно, списки закрыты
     document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
-    document.querySelectorAll('.submenu').forEach(sub => { sub.style.opacity = '1'; sub.style.display = ''; sub.classList.remove('show'); });
+    document.querySelectorAll('.submenu').forEach(sub => { sub.style.opacity = '1'; sub.classList.remove('show'); });
     
     if (!step) { 
         hintEl.style.display = 'none'; 
@@ -544,11 +538,10 @@ function updateCoachHint() {
     textEl.innerText = step.text;
     document.getElementById('coachHintSkip').innerText = step.tool === 'rotate' ? 'Понятно' : 'Пропустить';
     
-    // Сначала всех тускло и без кликов
+    // Все тускло и без кликов
     document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '0.2'; btn.style.pointerEvents = 'none'; });
     document.querySelectorAll('.submenu').forEach(sub => { sub.style.opacity = '0.2'; });
     
-    // Помощник: подсветить и разрешить клик
     function activate(el) { if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; } }
     
     if (step.tool === 'wall') {
@@ -556,52 +549,47 @@ function updateCoachHint() {
     } 
     else if (step.tool === 'opening') {
         activate(document.querySelector('.main-tool[data-group="opening"]'));
-        // Открываем подменю проемов
-        const sub = document.getElementById('sub-opening');
-        if (sub) { sub.classList.add('show'); sub.style.opacity = '1'; }
+        // Подсвечиваем "Дверь", но НЕ открываем меню (пользователь сам нажмет на Проем)
         activate(document.querySelector('#sub-opening .sub-btn[data-tool="door"]'));
     }
     else if (step.tool === 'os_astra512') {
         activate(document.querySelector('.main-tool[data-group="os"]'));
-        
-        // Открываем меню ОС
-        const subOs = document.getElementById('sub-os');
-        if (subOs) { subOs.classList.add('show'); subOs.style.opacity = '1'; }
         activate(document.getElementById('os-menu-sensors'));
-        
-        // Открываем меню датчиков
-        const subSensors = document.getElementById('sub-os-sensors');
-        if (subSensors) { subSensors.classList.add('show'); subSensors.style.opacity = '1'; }
         activate(document.querySelector('#sub-os-sensors .sub-btn[data-tool="os_astra512"]'));
     }
     else if (step.tool === 'cable_kspv8') {
         activate(document.querySelector('.main-tool[data-group="cable"]'));
-        
-        const subCable = document.getElementById('sub-cable');
-        if (subCable) { subCable.classList.add('show'); subCable.style.opacity = '1'; }
         activate(document.getElementById('cable-menu-os'));
-        
-        const subCableOs = document.getElementById('sub-cable-os');
-        if (subCableOs) { subCableOs.classList.add('show'); subCableOs.style.opacity = '1'; }
         activate(document.querySelector('#sub-cable-os .sub-btn[data-tool="cable_kspv8"]'));
     }
     else if (step.tool === 'rotate') {
         // Всё разблокировано, подсвечиваем панель поворота
         document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
         const rotPanel = document.getElementById('rotation-controls');
-        if (rotPanel) { rotPanel.style.display = 'flex'; rotPanel.style.boxShadow = '0 0 20px #ff6600'; }
+        if (rotPanel) { 
+            rotPanel.style.display = 'flex'; 
+            rotPanel.style.boxShadow = '0 0 20px #ff6600'; 
+            if (typeof updatePreview === 'function') updatePreview(); 
+        }
     }
 }
 
+// Обновление превью при клике на кнопки поворота (чтобы иконка не пропадала)
+const origRotLeft = document.getElementById('rotLeftBtn');
+const origRotRight = document.getElementById('rotRightBtn');
+if (origRotLeft) { origRotLeft.addEventListener('click', () => { if (typeof updatePreview === 'function') setTimeout(updatePreview, 10); }); }
+if (origRotRight) { origRotRight.addEventListener('click', () => { if (typeof updatePreview === 'function') setTimeout(updatePreview, 10); }); }
 document.getElementById('coachHintSkip').addEventListener('click', () => {
     if (!currentProjectId) return;
     const step = getCoachStep();
     if (step && step.tool === 'rotate') {
+        // Пользователь подтвердил, что понял про направление
         localStorage.setItem('ops_coach_rotate_' + currentProjectId, 'true');
         updateCoachHint();
     } else {
         localStorage.setItem('ops_coach_skip_' + currentProjectId, 'true');
         document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
+        document.querySelectorAll('.submenu').forEach(sub => { sub.classList.remove('show'); });
         document.getElementById('coachHint').style.display = 'none';
     }
 });
