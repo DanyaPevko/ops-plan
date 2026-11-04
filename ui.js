@@ -62,7 +62,6 @@ function showTourStep() {
             highlight.style.left = (rect.left - 6) + 'px';
             highlight.style.width = (rect.width + 12) + 'px';
             highlight.style.height = (rect.height + 12) + 'px';
-
             if (rect.top > window.innerHeight / 2) {
                 card.style.top = 'auto';
                 card.style.bottom = (window.innerHeight - rect.top + 20) + 'px';
@@ -192,6 +191,7 @@ function loadDashboard() {
         setTimeout(() => startTour('dash'), 400);
     }
 }
+
 let projectToChangeStatus = null;
 function openStatusModal(id, event) {
     event.stopPropagation();
@@ -372,8 +372,8 @@ const modeDrawBtn = document.getElementById('modeDrawBtn'); const modeEraseBtn =
 modeDrawBtn.addEventListener('click', () => { appMode = 'draw'; modeDrawBtn.classList.add('active'); modeEraseBtn.classList.remove('active'); });
 modeEraseBtn.addEventListener('click', () => { appMode = 'erase'; modeEraseBtn.classList.add('active'); modeDrawBtn.classList.remove('active'); });
 
-document.getElementById('rotLeftBtn').addEventListener('click', () => { elementAngle -= 45; if(elementAngle <= -360) elementAngle += 360; updatePreview(); });
-document.getElementById('rotRightBtn').addEventListener('click', () => { elementAngle += 45; if(elementAngle >= 360) elementAngle -= 360; updatePreview(); });
+document.getElementById('rotLeftBtn').addEventListener('click', () => { elementAngle -= 45; if(elementAngle <= -360) elementAngle += 360; updatePreview(); if (typeof updateCoachHint === 'function') updateCoachHint(); });
+document.getElementById('rotRightBtn').addEventListener('click', () => { elementAngle += 45; if(elementAngle >= 360) elementAngle -= 360; updatePreview(); if (typeof updateCoachHint === 'function') updateCoachHint(); });
 
 const rulerModes = document.getElementById('ruler-modes'); const rulerWallBtn = document.getElementById('rulerWallBtn'); const rulerSegmentBtn = document.getElementById('rulerSegmentBtn');
 rulerWallBtn.addEventListener('click', () => { rulerWallBtn.classList.add('active'); rulerSegmentBtn.classList.remove('active'); currentTool = 'ruler_wall'; });
@@ -389,14 +389,15 @@ mainBtns.forEach(btn => {
             } else { rulerModes.classList.remove('show'); document.getElementById('sub-' + groupName).classList.add('show'); if (groupName === 'os' || groupName === 'ps' || groupName === 'cable' || groupName === 'power') { currentTool = ''; } else { currentTool = document.querySelector('#sub-' + groupName + ' .sub-btn.active').dataset.tool; autoSwitchLayer(currentTool); } }
         } else { rulerModes.classList.remove('show'); currentTool = e.currentTarget.dataset.tool; autoSwitchLayer(currentTool); }
         updateRotationUI();
+        if (typeof updateCoachHint === 'function') updateCoachHint();
     });
 });
 
-subBtns.forEach(btn => { btn.addEventListener('click', (e) => { if(!e.target.dataset.tool) return; e.target.parentElement.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); currentTool = e.target.dataset.tool; autoSwitchLayer(currentTool); updateRotationUI(); }); });
-['os', 'ps', 'svn'].forEach(sys => { document.getElementById(`cable-menu-${sys}`).addEventListener('click', () => { document.getElementById('sub-cable').classList.remove('show'); document.getElementById(`sub-cable-${sys}`).classList.add('show'); currentTool = document.querySelector(`#sub-cable-${sys} .sub-btn.active`).dataset.tool; autoSwitchLayer(currentTool); updateRotationUI(); }); document.getElementById(`cable-back-${sys}`).addEventListener('click', () => { document.getElementById(`sub-cable-${sys}`).classList.remove('show'); document.getElementById('sub-cable').classList.add('show'); currentTool = ''; }); });
-['sensors', 'kts', 'devices'].forEach(sub => { document.getElementById(`os-menu-${sub}`).addEventListener('click', () => { document.getElementById('sub-os').classList.remove('show'); document.getElementById(`sub-os-${sub}`).classList.add('show'); currentTool = document.querySelector(`#sub-os-${sub} .sub-btn.active`) ? document.querySelector(`#sub-os-${sub} .sub-btn.active`).dataset.tool : 'os_nord_m'; autoSwitchLayer(currentTool); updateRotationUI(); }); document.getElementById(`os-back-${sub}`).addEventListener('click', () => { document.getElementById(`sub-os-${sub}`).classList.remove('show'); document.getElementById('sub-os').classList.add('show'); document.getElementById('rotation-controls').style.display = 'none'; currentTool = ''; }); });
-['sensors', 'alerts', 'devices'].forEach(sub => { document.getElementById(`ps-menu-${sub}`).addEventListener('click', () => { document.getElementById('sub-ps').classList.remove('show'); document.getElementById(`sub-ps-${sub}`).classList.add('show'); currentTool = document.querySelector(`#sub-ps-${sub} .sub-btn.active`) ? document.querySelector(`#sub-ps-${sub} .sub-btn.active`).dataset.tool : ''; autoSwitchLayer(currentTool); updateRotationUI(); }); document.getElementById(`ps-back-${sub}`).addEventListener('click', () => { document.getElementById(`sub-ps-${sub}`).classList.remove('show'); document.getElementById('sub-ps').classList.add('show'); document.getElementById('rotation-controls').style.display = 'none'; currentTool = ''; }); });
-['granit', 'signal', 'rokot'].forEach(sub => { document.getElementById(`ps-menu-dev-${sub}`).addEventListener('click', () => { document.getElementById('sub-ps-devices').classList.remove('show'); document.getElementById(`sub-ps-dev-${sub}`).classList.add('show'); currentTool = document.querySelector(`#sub-ps-dev-${sub} .sub-btn.active`).dataset.tool; autoSwitchLayer(currentTool); updateRotationUI(); }); document.getElementById(`ps-back-dev-${sub}`).addEventListener('click', () => { document.getElementById(`sub-ps-dev-${sub}`).classList.remove('show'); document.getElementById('sub-ps-devices').classList.add('show'); document.getElementById('rotation-controls').style.display = 'none'; currentTool = ''; }); });
+subBtns.forEach(btn => { btn.addEventListener('click', (e) => { if(!e.target.dataset.tool) return; e.target.parentElement.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); currentTool = e.target.dataset.tool; autoSwitchLayer(currentTool); updateRotationUI(); if (typeof updateCoachHint === 'function') updateCoachHint(); }); });
+['os', 'ps', 'svn'].forEach(sys => { document.getElementById(`cable-menu-${sys}`).addEventListener('click', () => { document.getElementById('sub-cable').classList.remove('show'); document.getElementById(`sub-cable-${sys}`).classList.add('show'); currentTool = document.querySelector(`#sub-cable-${sys} .sub-btn.active`).dataset.tool; autoSwitchLayer(currentTool); updateRotationUI(); if (typeof updateCoachHint === 'function') updateCoachHint(); }); document.getElementById(`cable-back-${sys}`).addEventListener('click', () => { document.getElementById(`sub-cable-${sys}`).classList.remove('show'); document.getElementById('sub-cable').classList.add('show'); currentTool = ''; if (typeof updateCoachHint === 'function') updateCoachHint(); }); });
+['sensors', 'kts', 'devices'].forEach(sub => { document.getElementById(`os-menu-${sub}`).addEventListener('click', () => { document.getElementById('sub-os').classList.remove('show'); document.getElementById(`sub-os-${sub}`).classList.add('show'); currentTool = document.querySelector(`#sub-os-${sub} .sub-btn.active`) ? document.querySelector(`#sub-os-${sub} .sub-btn.active`).dataset.tool : 'os_nord_m'; autoSwitchLayer(currentTool); updateRotationUI(); if (typeof updateCoachHint === 'function') updateCoachHint(); }); document.getElementById(`os-back-${sub}`).addEventListener('click', () => { document.getElementById(`sub-os-${sub}`).classList.remove('show'); document.getElementById('sub-os').classList.add('show'); document.getElementById('rotation-controls').style.display = 'none'; currentTool = ''; if (typeof updateCoachHint === 'function') updateCoachHint(); }); });
+['sensors', 'alerts', 'devices'].forEach(sub => { document.getElementById(`ps-menu-${sub}`).addEventListener('click', () => { document.getElementById('sub-ps').classList.remove('show'); document.getElementById(`sub-ps-${sub}`).classList.add('show'); currentTool = document.querySelector(`#sub-ps-${sub} .sub-btn.active`) ? document.querySelector(`#sub-ps-${sub} .sub-btn.active`).dataset.tool : ''; autoSwitchLayer(currentTool); updateRotationUI(); if (typeof updateCoachHint === 'function') updateCoachHint(); }); document.getElementById(`ps-back-${sub}`).addEventListener('click', () => { document.getElementById(`sub-ps-${sub}`).classList.remove('show'); document.getElementById('sub-ps').classList.add('show'); document.getElementById('rotation-controls').style.display = 'none'; currentTool = ''; if (typeof updateCoachHint === 'function') updateCoachHint(); }); });
+['granit', 'signal', 'rokot'].forEach(sub => { document.getElementById(`ps-menu-dev-${sub}`).addEventListener('click', () => { document.getElementById('sub-ps-devices').classList.remove('show'); document.getElementById(`sub-ps-dev-${sub}`).classList.add('show'); currentTool = document.querySelector(`#sub-ps-dev-${sub} .sub-btn.active`).dataset.tool; autoSwitchLayer(currentTool); updateRotationUI(); if (typeof updateCoachHint === 'function') updateCoachHint(); }); document.getElementById(`ps-back-dev-${sub}`).addEventListener('click', () => { document.getElementById(`sub-ps-dev-${sub}`).classList.remove('show'); document.getElementById('sub-ps-devices').classList.add('show'); document.getElementById('rotation-controls').style.display = 'none'; currentTool = ''; if (typeof updateCoachHint === 'function') updateCoachHint(); }); });
 
 const saveModal = document.getElementById('saveModal'); const calcChannelInput = document.getElementById('calcChannel');
 document.getElementById('saveBtn').addEventListener('click', () => { saveModal.classList.add('show'); }); 
@@ -410,7 +411,6 @@ document.getElementById('confirmSaveBtn').addEventListener('click', () => {
     if(selectedSystems.length === 0) { alert("Пожалуйста, отметьте хотя бы одну систему для выгрузки."); return; }
     selectedSystems.forEach((sys, index) => { setTimeout(() => { generateAndDownload(sys, `obekt_${sys}.png`); }, index * 400); }); saveModal.classList.remove('show');
 });
-
 function generateAndDownload(systemToSave, filename) {
     const originalLayer = currentSystemLayer; currentSystemLayer = systemToSave;
     const visibleElements = drawnElements.filter(el => isVisible(el) && el.type !== 'text'); 
@@ -453,6 +453,7 @@ function generateAndDownload(systemToSave, filename) {
     }
     const link = document.createElement('a'); link.download = filename; link.href = tempCanvas.toDataURL('image/png'); link.click(); currentSystemLayer = originalLayer; 
 }
+
 const estimateModal = document.getElementById('estimateModal');
 function generateEstimateHTML() {
     let cables = {}; let devices = {}; let totalDevices = 0;
@@ -487,7 +488,6 @@ document.getElementById('textSaveBtn').addEventListener('click', () => {
     } pendingElement = null; textModal.classList.remove('show');
 }); 
 document.getElementById('closeTextModalBtn').addEventListener('click', () => { pendingElement = null; textModal.classList.remove('show'); });
-
 // --- РЕЖИМ НОВИЧКА (ПОШАГОВЫЕ ПОДСКАЗКИ) ---
 function getCoachStep() {
     if (!currentProjectId) return null;
@@ -506,25 +506,31 @@ function getCoachStep() {
     
     if (!hasWall) return { text: '🧱 Шаг 1: Нарисуйте стену', tool: 'wall' };
     if (!hasOpening) return { text: '🚪 Шаг 2: Нажмите «Проем» и выберите «Дверь»', tool: 'opening' };
+    
     if (!hasDevice) {
         if (currentTool === 'os_astra512') return { text: '🛡️ Шаг 3: Нажмите на стену, чтобы поставить датчик', tool: 'os_astra512' };
         return { text: '🛡️ Шаг 3: Нажмите «ОС», затем «Датчики» и выберите «Астра 512»', tool: 'os_astra512' };
     }
     
-    if (!rotateConfirmed) return { text: '🔄 Шаг 4: Выберите направление датчика (панель внизу) и нажмите «Понятно»', tool: 'rotate' };
+    if (!rotateConfirmed) {
+        if (currentTool === 'os_astra512') return { text: '🔄 Шаг 4: Покрутите датчик (Влево/Вправо) и нажмите «Понятно»', tool: 'rotate' };
+        return { text: '🔄 Шаг 4: Выберите датчик, чтобы настроить направление', tool: 'os_astra512' };
+    }
+    
     if (!hasCable) return { text: '⚡ Шаг 5: Нажмите «Кабель», выберите тип и проведите линию', tool: 'cable_kspv8' };
     
     localStorage.setItem('ops_coach_done_' + currentProjectId, 'true');
     return { text: '🎉 Готово! Вы освоили основы. Нажмите ❓ для справки.', tool: null };
 }
-        function updateCoachHint() {
+
+function updateCoachHint() {
     const hintEl = document.getElementById('coachHint');
     const textEl = document.getElementById('coachHintText');
     if (!hintEl || !textEl) return;
     
     const step = getCoachStep();
     
-    // Всегда разблокируем всё перед обновлением, чтобы не залипало
+    // Сбрасываем всё в исходное (разблокировано, ярко)
     document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
     
     if (!step) { 
@@ -536,7 +542,7 @@ function getCoachStep() {
     textEl.innerText = step.text;
     document.getElementById('coachHintSkip').innerText = step.tool === 'rotate' ? 'Понятно' : 'Пропустить';
     
-    // Сначала всё тускло и заблокировано
+    // Все тускло и без кликов
     document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '0.2'; btn.style.pointerEvents = 'none'; });
     
     function activate(el) { if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; } }
@@ -546,7 +552,6 @@ function getCoachStep() {
     } 
     else if (step.tool === 'opening') {
         activate(document.querySelector('.main-tool[data-group="opening"]'));
-        // Если меню проемов УЖЕ открыто, подсвечиваем Дверь. Если нет - ждём клика по Проему.
         if (document.getElementById('sub-opening').classList.contains('show')) {
             activate(document.querySelector('#sub-opening .sub-btn[data-tool="door"]'));
         }
@@ -570,7 +575,6 @@ function getCoachStep() {
         }
     }
     else if (step.tool === 'rotate') {
-        // Всё разблокировано, подсвечиваем панель поворота
         document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
         const rotPanel = document.getElementById('rotation-controls');
         if (rotPanel) { 
@@ -579,8 +583,9 @@ function getCoachStep() {
             if (typeof updatePreview === 'function') updatePreview(); 
         }
     }
-        }
-        document.getElementById('coachHintSkip').addEventListener('click', () => {
+}
+
+document.getElementById('coachHintSkip').addEventListener('click', () => {
     if (!currentProjectId) return;
     const step = getCoachStep();
     if (step && step.tool === 'rotate') {
