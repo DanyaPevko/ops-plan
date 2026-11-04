@@ -95,7 +95,8 @@ document.getElementById('startTourFromHelpBtn').addEventListener('click', () => 
     helpModal.classList.remove('show');
     const isWorkspaceVisible = document.getElementById('workspace').style.display !== 'none';
     startTour(isWorkspaceVisible ? 'work' : 'dash');
-});let tooltipTimer;
+});
+let tooltipTimer;
 const tooltipEl = document.getElementById('mobileTooltip');
 
 document.addEventListener('touchstart', (e) => {
@@ -270,7 +271,8 @@ function deleteProject(id, event) {
         localStorage.removeItem('ops_data_' + id);
         loadDashboard();
     }
-}document.getElementById('exportDbBtn').addEventListener('click', () => {
+}
+document.getElementById('exportDbBtn').addEventListener('click', () => {
     let allData = { ops_projects: localStorage.getItem('ops_projects') || '[]' };
     let projects = JSON.parse(allData.ops_projects);
     projects.forEach(p => { allData['ops_data_' + p.id] = localStorage.getItem('ops_data_' + p.id) || '[]'; });
@@ -375,7 +377,8 @@ document.getElementById('rotRightBtn').addEventListener('click', () => { element
 
 const rulerModes = document.getElementById('ruler-modes'); const rulerWallBtn = document.getElementById('rulerWallBtn'); const rulerSegmentBtn = document.getElementById('rulerSegmentBtn');
 rulerWallBtn.addEventListener('click', () => { rulerWallBtn.classList.add('active'); rulerSegmentBtn.classList.remove('active'); currentTool = 'ruler_wall'; });
-rulerSegmentBtn.addEventListener('click', () => { rulerSegmentBtn.classList.add('active'); rulerWallBtn.classList.remove('active'); currentTool = 'ruler_segment'; });const mainBtns = document.querySelectorAll('.main-tool'); const subBtns = document.querySelectorAll('.sub-btn[data-tool]'); const allSubmenus = document.querySelectorAll('.submenu');
+rulerSegmentBtn.addEventListener('click', () => { rulerSegmentBtn.classList.add('active'); rulerWallBtn.classList.remove('active'); currentTool = 'ruler_segment'; });
+const mainBtns = document.querySelectorAll('.main-tool'); const subBtns = document.querySelectorAll('.sub-btn[data-tool]'); const allSubmenus = document.querySelectorAll('.submenu');
 
 mainBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -394,6 +397,7 @@ subBtns.forEach(btn => { btn.addEventListener('click', (e) => { if(!e.target.dat
 ['sensors', 'kts', 'devices'].forEach(sub => { document.getElementById(`os-menu-${sub}`).addEventListener('click', () => { document.getElementById('sub-os').classList.remove('show'); document.getElementById(`sub-os-${sub}`).classList.add('show'); currentTool = document.querySelector(`#sub-os-${sub} .sub-btn.active`) ? document.querySelector(`#sub-os-${sub} .sub-btn.active`).dataset.tool : 'os_nord_m'; autoSwitchLayer(currentTool); updateRotationUI(); }); document.getElementById(`os-back-${sub}`).addEventListener('click', () => { document.getElementById(`sub-os-${sub}`).classList.remove('show'); document.getElementById('sub-os').classList.add('show'); document.getElementById('rotation-controls').style.display = 'none'; currentTool = ''; }); });
 ['sensors', 'alerts', 'devices'].forEach(sub => { document.getElementById(`ps-menu-${sub}`).addEventListener('click', () => { document.getElementById('sub-ps').classList.remove('show'); document.getElementById(`sub-ps-${sub}`).classList.add('show'); currentTool = document.querySelector(`#sub-ps-${sub} .sub-btn.active`) ? document.querySelector(`#sub-ps-${sub} .sub-btn.active`).dataset.tool : ''; autoSwitchLayer(currentTool); updateRotationUI(); }); document.getElementById(`ps-back-${sub}`).addEventListener('click', () => { document.getElementById(`sub-ps-${sub}`).classList.remove('show'); document.getElementById('sub-ps').classList.add('show'); document.getElementById('rotation-controls').style.display = 'none'; currentTool = ''; }); });
 ['granit', 'signal', 'rokot'].forEach(sub => { document.getElementById(`ps-menu-dev-${sub}`).addEventListener('click', () => { document.getElementById('sub-ps-devices').classList.remove('show'); document.getElementById(`sub-ps-dev-${sub}`).classList.add('show'); currentTool = document.querySelector(`#sub-ps-dev-${sub} .sub-btn.active`).dataset.tool; autoSwitchLayer(currentTool); updateRotationUI(); }); document.getElementById(`ps-back-dev-${sub}`).addEventListener('click', () => { document.getElementById(`sub-ps-dev-${sub}`).classList.remove('show'); document.getElementById('sub-ps-devices').classList.add('show'); document.getElementById('rotation-controls').style.display = 'none'; currentTool = ''; }); });
+
 const saveModal = document.getElementById('saveModal'); const calcChannelInput = document.getElementById('calcChannel');
 document.getElementById('saveBtn').addEventListener('click', () => { saveModal.classList.add('show'); }); 
 document.getElementById('closeSaveModalBtn').addEventListener('click', () => { saveModal.classList.remove('show'); });
@@ -405,7 +409,9 @@ document.getElementById('confirmSaveBtn').addEventListener('click', () => {
     let selectedSystems = []; sysToggleBtns.forEach(btn => { if(btn.classList.contains('active-sys')) selectedSystems.push(btn.dataset.sys); });
     if(selectedSystems.length === 0) { alert("Пожалуйста, отметьте хотя бы одну систему для выгрузки."); return; }
     selectedSystems.forEach((sys, index) => { setTimeout(() => { generateAndDownload(sys, `obekt_${sys}.png`); }, index * 400); }); saveModal.classList.remove('show');
-});function generateAndDownload(systemToSave, filename) {
+});
+
+function generateAndDownload(systemToSave, filename) {
     const originalLayer = currentSystemLayer; currentSystemLayer = systemToSave;
     const visibleElements = drawnElements.filter(el => isVisible(el) && el.type !== 'text'); 
     const uniqueTypes = [...new Set(visibleElements.map(el => el.type))];
@@ -447,7 +453,6 @@ document.getElementById('confirmSaveBtn').addEventListener('click', () => {
     }
     const link = document.createElement('a'); link.download = filename; link.href = tempCanvas.toDataURL('image/png'); link.click(); currentSystemLayer = originalLayer; 
 }
-
 const estimateModal = document.getElementById('estimateModal');
 function generateEstimateHTML() {
     let cables = {}; let devices = {}; let totalDevices = 0;
@@ -482,3 +487,54 @@ document.getElementById('textSaveBtn').addEventListener('click', () => {
     } pendingElement = null; textModal.classList.remove('show');
 }); 
 document.getElementById('closeTextModalBtn').addEventListener('click', () => { pendingElement = null; textModal.classList.remove('show'); });
+
+// --- РЕЖИМ НОВИЧКА (ПОШАГОВЫЕ ПОДСКАЗКИ) ---
+function getCoachStep() {
+    if (!currentProjectId) return null;
+    if (localStorage.getItem('ops_coach_skip_' + currentProjectId)) return null;
+    if (localStorage.getItem('ops_coach_done_' + currentProjectId)) return null;
+    
+    let hasWall = false, hasOpening = false, hasDevice = false, hasCable = false;
+    drawnElements.forEach(el => {
+        if (el.type === 'wall') hasWall = true;
+        if (el.category === 'opening') hasOpening = true;
+        if (el.isLine && el.type.startsWith('cable_')) hasCable = true;
+        if (!el.isLine && el.category && el.category !== 'wall' && el.category !== 'opening' && el.category !== 'ruler' && el.category !== 'text') hasDevice = true;
+    });
+    
+    if (!hasWall) return { text: '🧱 Нарисуйте стену', tool: 'wall' };
+    if (!hasOpening) return { text: '🚪 Добавьте дверь или окно', tool: 'door' };
+    if (!hasDevice) return { text: '🛡️ Поставьте датчик', tool: 'os_astra512' };
+    if (!hasCable) return { text: '⚡ Проложите кабель к датчику', tool: 'cable_kspv8' };
+    
+    localStorage.setItem('ops_coach_done_' + currentProjectId, 'true');
+    return { text: '🎉 Готово! Вы освоили основы. Нажмите ❓ для справки.', tool: null };
+}
+
+function updateCoachHint() {
+    const hintEl = document.getElementById('coachHint');
+    const textEl = document.getElementById('coachHintText');
+    if (!hintEl || !textEl) return;
+    
+    const step = getCoachStep();
+    if (!step) { hintEl.style.display = 'none'; document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; }); return; }
+    
+    hintEl.style.display = 'flex';
+    textEl.innerText = step.text;
+    
+    document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '0.35'; });
+    if (step.tool) {
+        if (step.tool === 'wall') { const b = document.querySelector('.main-tool[data-tool="wall"]'); if (b) b.style.opacity = '1'; }
+        else if (step.tool === 'door') { const b = document.querySelector('.main-tool[data-group="opening"]'); if (b) b.style.opacity = '1'; }
+        else if (step.tool === 'os_astra512') { const b = document.querySelector('.main-tool[data-group="os"]'); if (b) b.style.opacity = '1'; }
+        else if (step.tool === 'cable_kspv8') { const b = document.querySelector('.main-tool[data-group="cable"]'); if (b) b.style.opacity = '1'; }
+    } else {
+        document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; });
+    }
+}
+
+document.getElementById('coachHintSkip').addEventListener('click', () => {
+    if (currentProjectId) localStorage.setItem('ops_coach_skip_' + currentProjectId, 'true');
+    document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; });
+    document.getElementById('coachHint').style.display = 'none';
+});
