@@ -75,6 +75,8 @@ function renderAll() {
         renderElement(drawingElement, ctx);
         activeGuides.forEach(guide => { ctx.beginPath(); ctx.moveTo(guide.x1, guide.y1); ctx.lineTo(guide.x2, guide.y2); ctx.strokeStyle = '#4CAF50'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]); });
     }
+    
+    if (typeof updateCoachHint === 'function') updateCoachHint();
 }
 
 function updatePreview() {
