@@ -566,6 +566,90 @@ function updateCoachHint() {
     else if (step.tool === 'rotate') {
         document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
         document.querySelectorAll('.submenu').forEach(sub => { sub.classList.remove('show'); });
+// --- РЕЖИМ НОВИЧКА (ПОШАГОВЫЕ ПОДСКАЗКИ) ---
+function getCoachStep() {
+    if (!currentProjectId) return null;
+    if (localStorage.getItem('ops_coach_skip_' + currentProjectId)) return null;
+    if (localStorage.getItem('ops_coach_done_' + currentProjectId)) return null;
+    
+    let hasWall = false, hasOpening = false, hasDevice = false, hasCable = false;
+    let rotateConfirmed = localStorage.getItem('ops_coach_rotate_' + currentProjectId);
+    
+    drawnElements.forEach(el => {
+        if (el.type === 'wall') hasWall = true;
+        if (el.category === 'opening') hasOpening = true;
+        if (el.isLine && el.type.startsWith('cable_')) hasCable = true;
+        if (!el.isLine && el.category && el.category !== 'wall' && el.category !== 'opening' && el.category !== 'ruler' && el.category !== 'text') hasDevice = true;
+    });
+    
+    if (!hasWall) return { text: '🧱 Шаг 1: Нарисуйте стену', tool: 'wall' };
+    if (!hasOpening) return { text: '🚪 Шаг 2: Нажмите «Проем» и выберите «Дверь»', tool: 'opening' };
+    if (!hasDevice) {
+        if (currentTool === 'os_astra512') return { text: '🛡️ Шаг 3: Нажмите на стену, чтобы поставить датчик', tool: 'os_astra512' };
+        return { text: '🛡️ Шаг 3: Нажмите «ОС», затем «Датчики» и выберите «Астра 512»', tool: 'os_astra512' };
+    }
+    
+    if (!rotateConfirmed) return { text: '🔄 Шаг 4: Выберите направление датчика (панель внизу) и нажмите «Понятно»', tool: 'rotate' };
+    if (!hasCable) return { text: '⚡ Шаг 5: Нажмите «Кабель», выберите тип и проведите линию', tool: 'cable_kspv8' };
+    
+    localStorage.setItem('ops_coach_done_' + currentProjectId, 'true');
+    return { text: '🎉 Готово! Вы освоили основы. Нажмите ❓ для справки.', tool: null };
+}
+        function updateCoachHint() {
+    const hintEl = document.getElementById('coachHint');
+    const textEl = document.getElementById('coachHintText');
+    if (!hintEl || !textEl) return;
+    
+    const step = getCoachStep();
+    
+    // Всегда разблокируем всё перед обновлением, чтобы не залипало
+    document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
+    
+    if (!step) { 
+        hintEl.style.display = 'none'; 
+        return; 
+    }
+    
+    hintEl.style.display = 'flex';
+    textEl.innerText = step.text;
+    document.getElementById('coachHintSkip').innerText = step.tool === 'rotate' ? 'Понятно' : 'Пропустить';
+    
+    // Сначала всё тускло и заблокировано
+    document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '0.2'; btn.style.pointerEvents = 'none'; });
+    
+    function activate(el) { if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; } }
+    
+    if (step.tool === 'wall') {
+        activate(document.querySelector('.main-tool[data-tool="wall"]'));
+    } 
+    else if (step.tool === 'opening') {
+        activate(document.querySelector('.main-tool[data-group="opening"]'));
+        // Если меню проемов УЖЕ открыто, подсвечиваем Дверь. Если нет - ждём клика по Проему.
+        if (document.getElementById('sub-opening').classList.contains('show')) {
+            activate(document.querySelector('#sub-opening .sub-btn[data-tool="door"]'));
+        }
+    }
+    else if (step.tool === 'os_astra512') {
+        activate(document.querySelector('.main-tool[data-group="os"]'));
+        if (document.getElementById('sub-os').classList.contains('show')) {
+            activate(document.getElementById('os-menu-sensors'));
+            if (document.getElementById('sub-os-sensors').classList.contains('show')) {
+                activate(document.querySelector('#sub-os-sensors .sub-btn[data-tool="os_astra512"]'));
+            }
+        }
+    }
+    else if (step.tool === 'cable_kspv8') {
+        activate(document.querySelector('.main-tool[data-group="cable"]'));
+        if (document.getElementById('sub-cable').classList.contains('show')) {
+            activate(document.getElementById('cable-menu-os'));
+            if (document.getElementById('sub-cable-os').classList.contains('show')) {
+                activate(document.querySelector('#sub-cable-os .sub-btn[data-tool="cable_kspv8"]'));
+            }
+        }
+    }
+    else if (step.tool === 'rotate') {
+        // Всё разблокировано, подсвечиваем панель поворота
+        document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
         const rotPanel = document.getElementById('rotation-controls');
         if (rotPanel) { 
             rotPanel.style.display = 'flex'; 
@@ -573,8 +657,8 @@ function updateCoachHint() {
             if (typeof updatePreview === 'function') updatePreview(); 
         }
     }
-}
-document.getElementById('coachHintSkip').addEventListener('click', () => {
+        }
+        document.getElementById('coachHintSkip').addEventListener('click', () => {
     if (!currentProjectId) return;
     const step = getCoachStep();
     if (step && step.tool === 'rotate') {
@@ -583,7 +667,6 @@ document.getElementById('coachHintSkip').addEventListener('click', () => {
     } else {
         localStorage.setItem('ops_coach_skip_' + currentProjectId, 'true');
         document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
-        document.querySelectorAll('.submenu').forEach(sub => { sub.classList.remove('show'); });
         document.getElementById('coachHint').style.display = 'none';
     }
 });
