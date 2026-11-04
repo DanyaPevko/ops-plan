@@ -1,0 +1,63 @@
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background-color: #333; display: flex; flex-direction: column; }
+
+/* НОВОЕ: СТИЛИ ДАШБОРДА */
+#dashboard { flex: 1; background: #f5f5f5; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+.dash-header h2 { margin-top: 0; color: #333; font-size: 24px; text-align: center; }
+#projectList { display: flex; flex-direction: column; gap: 10px; }
+.project-card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.1s; border-left: 5px solid #2196F3; }
+.project-card:active { transform: scale(0.98); }
+.project-info { flex: 1; display: flex; flex-direction: column; }
+.project-title { font-weight: bold; font-size: 16px; color: #333; margin-bottom: 5px; }
+.project-date { font-size: 12px; color: #777; }
+.project-delete { background: #f44336; color: white; border: none; border-radius: 5px; width: 40px; height: 40px; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+#workspace { flex: 1; display: flex; flex-direction: column; width: 100%; height: 100%; }
+
+#top-toolbar, #bottom-toolbar { flex: 0 0 auto; display: flex; flex-wrap: wrap; background: #fff; padding: 5px; gap: 5px; z-index: 10; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+#bottom-toolbar { padding-bottom: 10px; }
+
+.tool-btn { flex: 1 1 28%; padding: 8px 4px; font-size: 13px; border: 1px solid #ccc; background: linear-gradient(to bottom, #ffffff, #e0e0e0) !important; border-radius: 5px; text-align: center; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.1s, box-shadow 0.1s; color: #333; }
+.tool-btn:active { transform: translateY(2px); box-shadow: none; }
+.tool-btn.active { background: linear-gradient(to bottom, #66bb6a, #43a047) !important; color: white !important; border-color: #388E3C !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+
+.submenu { display: none; flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 5px; margin-top: 5px; padding-top: 5px; padding-bottom: 5px; border-top: 1px dashed #ccc; scrollbar-width: none; }
+.submenu::-webkit-scrollbar { display: none; }
+.submenu.show { display: flex; }
+#sub-opening .sub-btn, #sub-power .sub-btn, #sub-cable .sub-btn { flex: 1 1 auto; }
+#rotation-controls { display: none; flex: 1 1 100%; flex-wrap: nowrap; gap: 5px; margin-top: 5px; padding-top: 5px; border-top: 2px solid #FF9800; justify-content: space-between; }
+#rotation-controls .sub-btn { flex: 1 1 auto; }
+
+.sub-btn { background: linear-gradient(to bottom, #ede7f6, #d1c4e9) !important; border-color: #b39ddb !important; flex: 0 0 auto; padding: 8px 15px; font-size: 12px; color: #333; }
+.sub-btn.active { background: linear-gradient(to bottom, #7e57c2, #512da8) !important; color: white !important; border-color: #512DA8 !important; }
+
+.action-btn { background: linear-gradient(to bottom, #42a5f5, #1e88e5) !important; color: white !important; border-color: #1976D2 !important;}
+.action-btn.danger { background: linear-gradient(to bottom, #ef5350, #e53935) !important; border-color: #d32f2f !important; color: white !important;}
+.action-btn.warning { background: linear-gradient(to bottom, #ffa726, #fb8c00) !important; border-color: #f57c00 !important; color: white !important;}
+
+.info-btn { background: #fff !important; border-color: #ccc !important; padding: 2px !important; flex: 0 0 auto; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+#previewCanvas { width: 40px; height: 32px; display: block; touch-action: none; background: transparent; }
+
+#canvas-container { flex: 1 1 auto; width: 100%; position: relative; background-color: #555; overflow: hidden; touch-action: none; }
+#canvas-wrapper { position: absolute; top: 0; left: 0; width: 2000px; height: 2000px; transform-origin: 0 0; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+canvas { background: #fff; display: block; width: 100%; height: 100%; }
+
+.floating-btn { width: 46px; height: 46px; border-radius: 50%; padding: 0; font-size: 22px; flex: 0 0 auto; box-shadow: 0 4px 8px rgba(0,0,0,0.3); border-width: 2px; transition: transform 0.1s, box-shadow 0.1s; }
+.floating-btn:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+#side-filters { position: absolute; top: 10px; left: 10px; z-index: 20; display: flex; flex-direction: column; gap: 5px; }
+#filterOptions { display: none; flex-direction: column; gap: 5px; margin-top: 5px; }
+#filterOptions.show-filters { display: flex; }
+#floating-modes { position: absolute; bottom: 10px; left: 10px; z-index: 20; display: flex; flex-direction: column; gap: 10px; }
+
+#layerOsBtn.active { background: linear-gradient(to bottom, #ba68c8, #8e24aa) !important; border-color: #7b1fa2 !important; color: white !important;}
+#layerPsBtn.active { background: linear-gradient(to bottom, #ef5350, #e53935) !important; border-color: #d32f2f !important; color: white !important;}
+#layerSvnBtn.active { background: linear-gradient(to bottom, #66bb6a, #43a047) !important; border-color: #388E3C !important; color: white !important;}
+
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
+.modal-overlay.show { display: flex; }
+.modal-content { background: #f5f5f5; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+.modal-content h3 { margin-top: 0; margin-bottom: 5px; color: #333; font-size: 20px; }
+.modal-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+.modal-buttons button { padding: 12px; font-size: 15px; }
+#ruler-modes.show { display: flex !important; }
+#rulerWallBtn.active, #rulerSegmentBtn.active { border-color: #FBC02D !important; background: #FFF9C4 !important; }

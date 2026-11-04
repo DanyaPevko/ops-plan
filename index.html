@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>План Объекта ОПС и СКУД</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* --- ЭКРАН ЗАГРУЗКИ С ФИРМЕННЫМ ЛОГОТИПОМ --- */
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 999999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease, visibility 0.5s ease; }
+        #splash-screen.hidden { opacity: 0; visibility: hidden; }
+        .splash-logo-wrapper { display: flex; justify-content: center; align-items: center; }
+        .splash-logo-wrapper img { width: 220px; height: auto; display: block; background: transparent; animation: shield-glow 1.5s ease-in-out infinite alternate; }
+        @keyframes shield-glow { 
+            0% { transform: scale(0.98); filter: drop-shadow(0 0 5px rgba(255, 102, 0, 0.4)) drop-shadow(0 0 10px rgba(255, 102, 0, 0.2)); } 
+            100% { transform: scale(1.04); filter: drop-shadow(0 0 15px rgba(255, 102, 0, 0.8)) drop-shadow(0 0 30px rgba(255, 102, 0, 0.6)); } 
+        }
+
+        /* --- ФИРМЕННАЯ ТЕМНАЯ ТЕМА "ЗОВ" (ДАШБОРД И ОКНА) --- */
+        #dashboard { background: #121212 !important; color: #ffffff !important; min-height: 100vh; padding: 15px; box-sizing: border-box; }
+        .dash-header h2 { color: #ff6600 !important; text-transform: uppercase; letter-spacing: 1.5px; text-shadow: 0 2px 10px rgba(255, 102, 0, 0.25); }
+        .dash-controls { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; align-items: center; justify-content: space-between; }
+        .dash-icon-btn { flex: 1; background: #1e1e1e !important; border: 1px solid #333 !important; color: #fff !important; font-size: 24px; padding: 10px; border-radius: 10px; cursor: pointer; transition: 0.2s; text-align: center; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.4); }
+        .dash-icon-btn:active { background: #2a2a2a !important; border-color: #ff6600 !important; transform: scale(0.95); }
+        .dash-search-row { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
+        .dash-input { padding: 10px 12px; border: 1px solid #333 !important; border-radius: 8px; font-size: 16px; background: #1e1e1e !important; color: #fff !important; outline: none; transition: border-color 0.2s; }
+        .dash-input:focus { border-color: #ff6600 !important; }
+        .dash-input::placeholder { color: #777 !important; }
+        .dash-tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #1a1a1a !important; padding: 5px; border-radius: 10px; border: 1px solid #2a2a2a; }
+        .dash-tab { flex: 1; text-align: center; padding: 10px 5px; border-radius: 8px; font-weight: bold; color: #888 !important; transition: 0.3s; font-size: 14px; }
+        .dash-tab.active { background: linear-gradient(135deg, #ff7700, #e65100) !important; color: #fff !important; box-shadow: 0 2px 10px rgba(255, 102, 0, 0.4); }
+        .project-card { background: #1e1e1e !important; border: 1px solid #2e2e2e !important; border-left: 4px solid #ff6600 !important; border-radius: 10px; padding: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.5) !important; }
+        .project-title { color: #ffffff !important; font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+        .project-date { color: #888888 !important; font-size: 12px; }
+        .project-actions { display: flex; gap: 6px; align-items: center; }
+        .p-btn { background: #2a2a2a !important; border: 1px solid #3a3a3a !important; color: #fff !important; font-size: 18px; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .p-btn:active { background: #ff6600 !important; border-color: #ff6600 !important; transform: scale(0.95); }
+        .fab-btn { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #ff7700, #d84315) !important; color: white; font-size: 36px; line-height: 1; border: 2px solid #ff9800 !important; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.6) !important; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 100; transition: transform 0.2s; }
+        .fab-btn:active { transform: scale(0.9); }
+        .modal-content { background: #1e1e1e !important; color: #fff !important; border: 1px solid #ff6600 !important; box-shadow: 0 0 25px rgba(255, 102, 0, 0.25) !important; }
+        .modal-content h3 { color: #ff6600 !important; margin-top: 0; }
+        .modal-content p, .modal-content label { color: #ccc !important; }
+        .modal-content input { background: #121212 !important; color: #fff !important; border: 1px solid #444 !important; }
+                /* --- ТЕМНАЯ ТЕМА РАБОЧЕЙ ОБЛАСТИ (ПРОЕКТА) В СТИЛЕ "ЗОВ" --- */
+        #workspace { background: #121212 !important; }
+        #top-toolbar { background: #1a1a1a !important; border-bottom: 1px solid #333 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important; }
+        .submenu { background: #222222 !important; border: 1px solid #3a3a3a !important; border-left: 3px solid #ff6600 !important; border-radius: 8px; padding: 6px !important; margin-top: 6px; }
+        #rotation-controls { background: #222222 !important; border-top: 1px solid #333 !important; padding: 6px !important; border-radius: 8px; margin-top: 6px; }
+        #previewContainer { background: #f5f5f5 !important; border: 2px solid #ff6600 !important; border-radius: 6px; }
+
+        .tool-btn { background: #2a2a2a !important; color: #e0e0e0 !important; border: 1px solid #3d3d3d !important; box-shadow: 0 2px 4px rgba(0,0,0,0.4) !important; transition: all 0.2s ease; }
+        .tool-btn:active { transform: scale(0.96); }
+        .tool-btn.active { background: linear-gradient(135deg, #ff7700, #e65100) !important; color: #ffffff !important; border-color: #ff9800 !important; box-shadow: 0 0 12px rgba(255, 102, 0, 0.5) !important; font-weight: bold; }
+        .tool-btn.warning { background: linear-gradient(to bottom, #ff8f00, #ef6c00) !important; border-color: #ff6600 !important; color: #fff !important; }
+        .tool-btn.danger { background: linear-gradient(to bottom, #d32f2f, #b71c1c) !important; border-color: #f44336 !important; color: #fff !important; }
+
+        #canvas-container { background: #0d0d0d !important; padding-bottom: 70px; }
+        #side-filters, #floating-modes, #ruler-modes { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+        
+        .floating-btn { background: #262626 !important; color: #fff !important; border: 2px solid #444 !important; border-radius: 50% !important; width: 48px !important; height: 48px !important; display: flex !important; justify-content: center !important; align-items: center !important; box-shadow: 0 4px 10px rgba(0,0,0,0.6) !important; padding: 0 !important; }
+        .floating-btn.active { background: #1a1a1a !important; border-color: #ff6600 !important; box-shadow: 0 0 15px rgba(255, 102, 0, 0.8) !important; transform: scale(1.06); }
+
+        #filterOptions { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease; display: flex; flex-direction: column; gap: 10px; margin: 0 -15px; padding: 0 15px; background: transparent !important; border: none !important; box-shadow: none !important; }
+        #filterOptions.show-filters { max-height: 250px; opacity: 1; margin-top: 10px; padding-top: 5px; padding-bottom: 15px; }
+
+        #bottom-toolbar-wrapper { position: fixed; bottom: 0; left: 0; width: 100%; display: flex; flex-direction: column; background: #1a1a1a !important; border-top: 1px solid #333 !important; box-shadow: 0 -4px 12px rgba(0,0,0,0.7) !important; z-index: 10; }
+        #bottom-toggle-btn { background: #2a2a2a !important; color: #ff6600 !important; border: 1px solid #444 !important; }
+        #bottom-toolbar-extra { max-height: 0; opacity: 0; overflow: hidden; padding: 0 10px; transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease; display: flex; gap: 10px; justify-content: space-between; }
+        #bottom-toolbar-extra.expanded { max-height: 100px; opacity: 1; padding: 0 10px 10px 10px; }
+
+        .toggle-sys { transition: all 0.3s ease; position: relative; }
+        .toggle-sys.active-sys { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 102, 0, 0.8), 0 0 30px rgba(255, 102, 0, 0.4) !important; border: 2px solid #ff6600 !important; z-index: 2; }
+        .has-tooltip { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        #mobileTooltip { display: none; position: fixed; background: rgba(255, 102, 0, 0.95); color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 6px; font-size: 14px; z-index: 9999; pointer-events: none; transform: translate(-50%, -100%); white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+
+        /* --- СТИЛИ ИНТЕРАКТИВНОГО ОБУЧЕНИЯ И СПРАВОЧНИКА --- */
+        #tourOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100000; pointer-events: auto; }
+        #tourHighlight { position: fixed; border: 3px solid #ff6600; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.82), 0 0 25px #ff6600; transition: all 0.35s ease; pointer-events: none; z-index: 100001; }
+        #tourCard { position: fixed; left: 5%; width: 90%; background: #1e1e1e; border: 2px solid #ff6600; border-radius: 12px; padding: 15px; color: #fff; z-index: 100002; box-shadow: 0 10px 30px rgba(0,0,0,0.9); box-sizing: border-box; transition: all 0.35s ease; }
+        .help-section { background: #151515; border-left: 3px solid #ff6600; padding: 10px; border-radius: 6px; margin-bottom: 10px; text-align: left; font-size: 13px; line-height: 1.4; color: #ddd; }
+        .help-section b { color: #ff6600; font-size: 14px; display: block; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div id="splash-screen">
+    <div class="splash-logo-wrapper">
+        <img src="10882.png" onerror="this.onerror=null; this.src='10882.jpg';" alt="ЗОВ">
+    </div>
+</div>
+
+<div id="mobileTooltip"></div>
+
+<!-- ГЛАВНОЕ МЕНЮ (ДАШБОРД) -->
+<div id="dashboard" style="display: none;">
+    <div class="dash-header">
+        <h2 style="margin: 0 0 15px 0; text-align: center;">🛡️ Проекты «ЗОВ»</h2>
+        <div class="dash-controls" id="dashControlRow">
+            <button class="dash-icon-btn has-tooltip" data-tooltip="Настройки приложения" id="settingsBtn">⚙️</button>
+            <button class="dash-icon-btn has-tooltip" data-tooltip="Создать резервную копию" id="exportDbBtn">💾</button>
+            <button class="dash-icon-btn has-tooltip" data-tooltip="Восстановить базу из файла" id="importDbBtn">📂</button>
+            <button class="dash-icon-btn has-tooltip" data-tooltip="Справка и обучение" id="helpDashBtn">❓</button>
+            <input type="file" id="importDbInput" accept=".json" style="display: none;">
+        </div>
+        <div class="dash-search-row" id="dashSearchRow">
+            <input type="text" id="searchProjectInput" class="dash-input" placeholder="🔍 Поиск объекта..." style="flex: 2;">
+            <select id="sortProjectSelect" class="dash-input" style="flex: 1; padding: 10px 5px;">
+                <option value="new">Новые</option>
+                <option value="old">Старые</option>
+                <option value="az">А-Я</option>
+                <option value="za">Я-А</option>
+            </select>
+        </div>
+        <div class="dash-tabs" id="dashTabsRow">
+            <div class="dash-tab active" data-tab="active">В работе</div>
+            <div class="dash-tab" data-tab="done">Сдано</div>
+            <div class="dash-tab" data-tab="archive">Архив</div>
+        </div>
+    </div>
+    
+    <div id="projectList" style="padding-bottom: 100px;"></div>
+    <button class="fab-btn has-tooltip" data-tooltip="Создать новый проект" id="createNewProjectBtn">+</button>
+</div>
+
+<!-- РАБОЧАЯ ОБЛАСТЬ (ХОЛСТ) -->
+<div id="workspace" style="display: none;">
+    <div id="top-toolbar">
+        <div class="tool-btn active main-tool" data-tool="wall">🧱 Стена</div>
+        <div class="tool-btn main-tool" data-group="ruler">📏 Масштаб</div>
+        <div class="tool-btn main-tool" data-group="opening">🚪 Проем</div>
+        <div class="tool-btn main-tool" data-group="cable">⚡ Кабель</div>
+        <div class="tool-btn main-tool" data-group="os">
+            <svg width="14" height="14" viewBox="0 0 32 32" style="vertical-align: middle; margin-right: 6px;">
+                <rect x="0" y="0" width="32" height="32" fill="none" stroke="#42a5f5" stroke-width="4"/>
+                <polygon points="16,0 32,16 16,32" fill="#42a5f5"/>
+            </svg> ОС
+        </div>
+        <div class="tool-btn main-tool" data-group="power">🔌 220В</div>
+        <div class="tool-btn main-tool" data-group="ps">🔴 ПС</div>
+        <div class="tool-btn main-tool" data-tool="camera">📷 Камера</div>
+        <div class="tool-btn main-tool" data-tool="text">📝 Текст</div>
+
+        <div class="submenu" id="sub-opening"><div class="tool-btn sub-btn active" data-tool="door">Дверь</div><div class="tool-btn sub-btn" data-tool="window">Окно</div><div class="tool-btn sub-btn" data-tool="opening_empty">Проем</div></div>
+        <div class="submenu" id="sub-cable"><div class="tool-btn sub-btn" id="cable-menu-os">ОС</div><div class="tool-btn sub-btn" id="cable-menu-ps">ПС</div><div class="tool-btn sub-btn" id="cable-menu-svn">СВН</div></div>
+        <div class="submenu" id="sub-cable-os"><div class="tool-btn sub-btn action-btn danger" id="cable-back-os">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="cable_kspv8">КСПВ 8х0.5</div><div class="tool-btn sub-btn" data-tool="cable_kspv4">КСПВ 4х0.5</div><div class="tool-btn sub-btn" data-tool="cable_shvvp">ШВВП 2x0.75</div></div>
+        <div class="submenu" id="sub-cable-ps"><div class="tool-btn sub-btn action-btn danger" id="cable-back-ps">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="cable_frls2x05">FRLS 2x0.5</div><div class="tool-btn sub-btn" data-tool="cable_frls2x075">FRLS 2x0.75</div><div class="tool-btn sub-btn" data-tool="cable_frls4x075">FRLS 4x0.75</div><div class="tool-btn sub-btn" data-tool="cable_frhf2x05">FRHF 2x0.5</div><div class="tool-btn sub-btn" data-tool="cable_frhf2x075">FRHF 2x0.75</div><div class="tool-btn sub-btn" data-tool="cable_frhf4x075">FRHF 4x0.75</div><div class="tool-btn sub-btn" data-tool="cable_vvg3x25">ВВГнг 3х2.5</div></div>
+        <div class="submenu" id="sub-cable-svn"><div class="tool-btn sub-btn action-btn danger" id="cable-back-svn">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="cable_utp5e">UTP cat.5e</div></div>
+        <div class="submenu" id="sub-os"><div class="tool-btn sub-btn" id="os-menu-sensors">Датчики</div><div class="tool-btn sub-btn" id="os-menu-kts">КТС</div><div class="tool-btn sub-btn" id="os-menu-devices">Прибор</div><div class="tool-btn sub-btn" data-tool="os_tm">ТМ</div><div class="tool-btn sub-btn" data-tool="os_mayak">Маяк</div></div>
+        <div class="submenu" id="sub-os-sensors"><div class="tool-btn sub-btn action-btn danger" id="os-back-sensors">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="os_astra512">Астра 512</div><div class="tool-btn sub-btn" data-tool="os_astra621">Астра 621</div><div class="tool-btn sub-btn" data-tool="os_astra8">Астра 8</div><div class="tool-btn sub-btn" data-tool="os_smk">СМК</div><div class="tool-btn sub-btn" data-tool="os_shtora">Штора</div><div class="tool-btn sub-btn" data-tool="os_shoroh">Шорох</div><div class="tool-btn sub-btn" data-tool="os_astras">Астра С</div></div>
+        <div class="submenu" id="sub-os-kts"><div class="tool-btn sub-btn action-btn danger" id="os-back-kts">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="os_kts_astra321">Астра 321</div><div class="tool-btn sub-btn" data-tool="os_kts_astrar">Астра Р</div><div class="tool-btn sub-btn" data-tool="os_kts_nvpb16">NV PB 16</div><div class="tool-btn sub-btn" data-tool="os_kts_gsn">GSN</div></div>
+        <div class="submenu" id="sub-os-devices"><div class="tool-btn sub-btn action-btn danger" id="os-back-devices">🔙 Назад</div><div class="tool-btn sub-btn" data-tool="os_nord_m">Nord М</div><div class="tool-btn sub-btn" data-tool="os_nord_p">Nord П</div><div class="tool-btn sub-btn" data-tool="os_nord_pro">Nord Pro</div></div>
+                <div class="submenu" id="sub-ps"><div class="tool-btn sub-btn" id="ps-menu-sensors">Датчики</div><div class="tool-btn sub-btn" id="ps-menu-alerts">Оповещение</div><div class="tool-btn sub-btn" id="ps-menu-devices">Приборы</div></div>
+        <div class="submenu" id="sub-ps-sensors"><div class="tool-btn sub-btn action-btn danger" id="ps-back-sensors">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="ps_ip212">ИП-212-142</div><div class="tool-btn sub-btn" data-tool="ps_ipr513">ИПР-513-11</div></div>
+        <div class="submenu" id="sub-ps-alerts"><div class="tool-btn sub-btn action-btn danger" id="ps-back-alerts">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="ps_molniya12">Молния-12</div><div class="tool-btn sub-btn" data-tool="ps_m24_3">М-24-3</div><div class="tool-btn sub-btn" data-tool="ps_mayak24">Маяк-24</div></div>
+        <div class="submenu" id="sub-ps-devices"><div class="tool-btn sub-btn action-btn danger" id="ps-back-devices">🔙 Назад</div><div class="tool-btn sub-btn" id="ps-menu-dev-granit">Гранит</div><div class="tool-btn sub-btn" id="ps-menu-dev-signal">Сигнал</div><div class="tool-btn sub-btn" id="ps-menu-dev-rokot">Рокот</div></div>
+        <div class="submenu" id="sub-ps-dev-granit"><div class="tool-btn sub-btn action-btn danger" id="ps-back-dev-granit">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="ps_granit_3">Г-3</div><div class="tool-btn sub-btn" data-tool="ps_granit_5">Г-5</div><div class="tool-btn sub-btn" data-tool="ps_granit_8">Г-8</div><div class="tool-btn sub-btn" data-tool="ps_granit_16">Г-16</div><div class="tool-btn sub-btn" data-tool="ps_granit_24">Г-24</div></div>
+        <div class="submenu" id="sub-ps-dev-signal"><div class="tool-btn sub-btn action-btn danger" id="ps-back-dev-signal">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="ps_signal_20m">С-20М</div><div class="tool-btn sub-btn" data-tool="ps_signal_20p">С-20П</div><div class="tool-btn sub-btn" data-tool="ps_signal_10">С-10</div></div>
+        <div class="submenu" id="sub-ps-dev-rokot"><div class="tool-btn sub-btn action-btn danger" id="ps-back-dev-rokot">🔙 Назад</div><div class="tool-btn sub-btn active" data-tool="ps_rokot_2">Р-2</div><div class="tool-btn sub-btn" data-tool="ps_rokot_3">Р-3</div><div class="tool-btn sub-btn" data-tool="ps_rokot_4">Р-4</div></div>
+        <div class="submenu" id="sub-power"><div class="tool-btn sub-btn active" data-tool="power_panel">Щит</div><div class="tool-btn sub-btn" data-tool="power_socket">Розетка</div></div>
+        <div class="submenu" id="sub-ruler" style="display:none;"></div>
+        <div id="rotation-controls"><div class="tool-btn sub-btn action-btn warning" id="rotLeftBtn">↺ Влево</div><div class="tool-btn sub-btn info-btn" id="previewContainer"><canvas id="previewCanvas" width="50" height="40"></canvas></div><div class="tool-btn sub-btn action-btn warning" id="rotRightBtn">Вправо ↻</div></div>
+    </div>
+
+    <div id="canvas-container">
+        <div id="side-filters">
+            <div class="tool-btn floating-btn" id="filterToggleBtn">🎛️</div>
+            <div id="filterOptions"><div class="tool-btn floating-btn active" id="layerOsBtn">🛡️</div><div class="tool-btn floating-btn" id="layerPsBtn">🔥</div><div class="tool-btn floating-btn" id="layerSvnBtn">📷</div></div>
+        </div>
+        <div id="ruler-modes" style="display: none; position: absolute; top: 10px; right: 10px; z-index: 20; flex-direction: column; gap: 10px;">
+            <div class="tool-btn floating-btn active" id="rulerWallBtn" title="Вся стена"><svg width="24" height="24" viewBox="0 0 24 24"><line x1="12" y1="4" x2="12" y2="20" stroke="#fff" stroke-width="3"/><line x1="6" y1="4" x2="18" y2="4" stroke="#fff" stroke-width="3"/><line x1="6" y1="20" x2="18" y2="20" stroke="#fff" stroke-width="3"/></svg></div>
+            <div class="tool-btn floating-btn" id="rulerSegmentBtn" title="Отрезок комнаты"><svg width="24" height="24" viewBox="0 0 24 24"><line x1="12" y1="4" x2="12" y2="12" stroke="#ff5252" stroke-width="3"/><line x1="6" y1="4" x2="18" y2="4" stroke="#ff5252" stroke-width="3"/><line x1="6" y1="12" x2="18" y2="12" stroke="#fff" stroke-width="3"/><line x1="12" y1="12" x2="12" y2="20" stroke="#69f0ae" stroke-width="3"/><line x1="6" y1="20" x2="18" y2="20" stroke="#69f0ae" stroke-width="3"/></svg></div>
+        </div>
+        <div id="floating-modes" style="display: flex; flex-direction: column; gap: 10px;"><div class="tool-btn floating-btn active" id="modeDrawBtn">✏️</div><div class="tool-btn floating-btn" id="modeEraseBtn" style="color: #ff5252;">🧽</div></div>
+        <div id="canvas-wrapper"><canvas id="planCanvas"></canvas></div>
+    </div>
+    
+    <div id="bottom-toolbar-wrapper">
+        <div id="bottom-toolbar-main" style="display: flex; justify-content: space-between; padding: 10px; gap: 10px;">
+            <div class="tool-btn action-btn" id="homeBtn" style="flex: 1;">🏠 В меню</div>
+            <div class="tool-btn" id="bottom-toggle-btn" style="flex: 0 0 50px; display: flex; justify-content: center; align-items: center; font-size: 20px; border-radius: 8px;">🔼</div>
+            <div class="tool-btn action-btn warning" id="undoBtn" style="flex: 1;">↩ Отменить</div>
+        </div>
+        <div id="bottom-toolbar-extra">
+            <div class="tool-btn action-btn danger" id="clearBtn" style="flex: 1; min-width: 0; padding: 12px 5px;">Очистить</div>
+            <div class="tool-btn action-btn" id="estimateBtn" style="flex: 1; min-width: 0; padding: 12px 5px;">📊 Смета</div>
+            <div class="tool-btn action-btn warning" id="saveBtn" style="flex: 1; min-width: 0; padding: 12px 5px;">Выгрузить</div>
+            <div class="tool-btn action-btn" id="helpWorkBtn" style="flex: 0 0 42px; padding: 12px 0; text-align: center;">❓</div>
+        </div>
+    </div>
+</div>
+<div id="saveModal" class="modal-overlay"><div class="modal-content"><h3>Выгрузка проекта</h3><p style="font-size: 14px; margin-top: 0;">Отметьте системы для выгрузки:</p><div class="modal-buttons" style="flex-wrap: wrap; gap: 10px;"><button class="tool-btn action-btn toggle-sys" data-sys="OS" style="flex: 1 1 25%;">🛡️ ОС</button><button class="tool-btn action-btn danger toggle-sys" data-sys="PS" style="flex: 1 1 25%;">🔥 ПС</button><button class="tool-btn action-btn toggle-sys" data-sys="SVN" style="flex: 1 1 25%;">📷 СВН</button></div><button class="tool-btn action-btn warning" id="confirmSaveBtn" style="margin-top: 20px; width: 100%;">Выгрузить выбранное</button><button class="tool-btn" id="closeSaveModalBtn" style="margin-top: 10px; width: 100%;">Отмена</button></div></div>
+<div id="smkModal" class="modal-overlay"><div class="modal-content"><h3>Установка СМК</h3><p style="font-size: 14px; margin-top: 0;">Выберите тип проема:</p><div class="modal-buttons"><button class="tool-btn action-btn" id="smkSingleBtn">🚪 Одинарная створка</button><button class="tool-btn action-btn warning" id="smkDoubleBtn">🚪🚪 Две створки</button></div><button class="tool-btn" id="closeSmkModalBtn" style="margin-top: 15px;">Отмена</button></div></div>
+<div id="textModal" class="modal-overlay"><div class="modal-content"><h3 id="textModalTitle">Ввод данных</h3><input type="text" id="textInputParams" style="width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 16px;" placeholder="Введите значение..."><div class="modal-buttons"><button class="tool-btn action-btn warning" id="textSaveBtn">ОК</button></div><button class="tool-btn" id="closeTextModalBtn" style="margin-top: 15px;">Отмена</button></div></div>
+<div id="estimateModal" class="modal-overlay"><div class="modal-content" style="max-height: 85vh; overflow-y: auto;"><h3 style="margin-bottom: 5px;">📊 Смета проекта</h3><p style="font-size: 12px; margin-top: 0;">(На основе 1 м = <span id="scaleDisplay">50</span> px)</p><div style="text-align: left; margin-top: 10px; background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444;"><label style="font-size: 14px; font-weight: bold;">Длина кабель-канала (с дальномера):</label><div style="display: flex; gap: 5px; margin-top: 5px;"><input type="number" id="calcChannel" value="0" style="flex: 1; padding: 8px; border-radius: 5px; font-size: 16px;"><span style="padding: 8px;">м</span></div></div><div id="estimateContent" style="text-align: left; font-size: 14px; color: #eee; margin: 15px 0; padding: 10px; background: #121212; border-radius: 8px; border: 1px solid #333; min-height: 100px;"></div><button class="tool-btn action-btn warning" id="closeEstimateBtn" style="width: 100%;">Закрыть смету</button></div></div>
+<div id="statusModal" class="modal-overlay"><div class="modal-content"><h3>Папка проекта</h3><div class="modal-buttons" style="flex-direction: column; gap: 10px;"><button class="tool-btn action-btn" onclick="confirmStatusChange('active')">В работе</button><button class="tool-btn action-btn warning" onclick="confirmStatusChange('done')">Сдано</button><button class="tool-btn action-btn danger" onclick="confirmStatusChange('archive')">Архив</button></div><button class="tool-btn" id="closeStatusModalBtn" style="margin-top: 15px;">Отмена</button></div></div>
+<div id="settingsModal" class="modal-overlay"><div class="modal-content"><h3>Настройки</h3><div style="text-align: left; margin-top: 10px;"><label style="font-size: 14px;">Стандартный масштаб (пикселей в 1 метре):</label><input type="number" id="settingsScaleInput" value="50" style="width: 90%; padding: 10px; margin-top: 5px; border-radius: 5px;"></div><button class="tool-btn action-btn warning" id="saveSettingsBtn" style="margin-top: 20px; width: 100%;">Сохранить</button><button class="tool-btn" id="closeSettingsBtn" style="margin-top: 10px; width: 100%;">Отмена</button></div></div>
+
+<!-- НОВОЕ: Справочник инженера -->
+<div id="helpModal" class="modal-overlay">
+    <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+        <h3>📖 Справочник «ЗОВ»</h3>
+        <div class="help-section"><b>📐 Черчение и Навигация</b>Двумя пальцами масштабируйте и двигайте лист. Стены автоматически выравниваются под углы 45° и 90° с зелеными направляющими.</div>
+        <div class="help-section"><b>📏 Масштаб и Размеры</b>Выберите «Масштаб» (вся стена или отрезок комнаты) и нажмите на стену, чтобы задать длину в метрах. <i>Двойное касание</i> по желтой выноске позволяет изменить размер.</div>
+        <div class="help-section"><b>🎛️ Слои (ОС, ПС, СВН)</b>Кнопка фильтра слева переключает видимость систем. При выборе датчика или кабеля нужный слой включается автоматически.</div>
+        <div class="help-section"><b>🛡️ Оборудование и СМК</b>Приборы, розетки и оповещатели сами прилипают к стенам. Датчик СМК при установке на дверь спросит тип створки (одинарная/двойная).</div>
+        <div class="help-section"><b>📊 Смета и Выгрузка</b>Смета считает кабели (+10% запас) и добавляет по 2 м на вертикальные опуски к каждой точке. Выгрузка сохраняет PNG-чертеж с названием объекта, легендой и сметой.</div>
+        <button class="tool-btn action-btn warning" id="startTourFromHelpBtn" style="width: 100%; margin-top: 10px;">🎯 Запустить интерактивный тур</button>
+        <button class="tool-btn" id="closeHelpModalBtn" style="width: 100%; margin-top: 10px;">Закрыть</button>
+    </div>
+</div>
+
+<!-- НОВОЕ: Оверлей пошагового интерактивного тура -->
+<div id="tourOverlay">
+    <div id="tourHighlight"></div>
+    <div id="tourCard">
+        <div id="tourStepCounter" style="font-size: 12px; color: #ff6600; font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">Шаг 1 из 5</div>
+        <h3 id="tourTitle" style="margin: 0 0 8px 0; color: #fff; font-size: 18px;">Заголовок</h3>
+        <p id="tourText" style="margin: 0 0 15px 0; font-size: 14px; color: #ccc; line-height: 1.4;">Описание шага...</p>
+        <div style="display: flex; gap: 10px; justify-content: space-between;">
+            <button class="tool-btn" id="tourSkipBtn" style="flex: 1; padding: 10px;">Пропустить</button>
+            <button class="tool-btn action-btn warning" id="tourNextBtn" style="flex: 1.5; padding: 10px;">Далее ➔</button>
+        </div>
+    </div>
+</div>
+
+<script src="data.js"></script><script src="draw.js"></script><script src="ui.js"></script><script src="events.js"></script>
+</body>
+</html>
