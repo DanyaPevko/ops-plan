@@ -488,31 +488,30 @@ document.getElementById('textSaveBtn').addEventListener('click', () => {
 }); 
 document.getElementById('closeTextModalBtn').addEventListener('click', () => { pendingElement = null; textModal.classList.remove('show'); });
 
-// --- РЕЖИМ НОВИЧКА (ПОШАГОВЫЕ ПОДСКАЗКИ) ---
+ // --- РЕЖИМ НОВИЧКА (ПОШАГОВЫЕ ПОДСКАЗКИ) ---
 function getCoachStep() {
     if (!currentProjectId) return null;
     if (localStorage.getItem('ops_coach_skip_' + currentProjectId)) return null;
     if (localStorage.getItem('ops_coach_done_' + currentProjectId)) return null;
     
-    let hasWall = false, hasOpening = false, hasDevice = false, hasDirection = false, hasCable = false;
+    let hasWall = false, hasOpening = false, hasDevice = false, hasCable = false;
+    let rotateConfirmed = localStorage.getItem('ops_coach_rotate_' + currentProjectId);
+    
     drawnElements.forEach(el => {
         if (el.type === 'wall') hasWall = true;
         if (el.category === 'opening') hasOpening = true;
         if (el.isLine && el.type.startsWith('cable_')) hasCable = true;
-        if (!el.isLine && el.category && el.category !== 'wall' && el.category !== 'opening' && el.category !== 'ruler' && el.category !== 'text') {
-            hasDevice = true;
-            // Проверяем, поворачивал ли пользователь датчик (angle не 0 или 180)
-            if (el.angle && el.angle % 360 !== 0 && el.angle % 360 !== 180 && el.angle % 360 !== -180) hasDirection = true;
-        }
+        if (!el.isLine && el.category && el.category !== 'wall' && el.category !== 'opening' && el.category !== 'ruler' && el.category !== 'text') hasDevice = true;
     });
     
     if (!hasWall) return { text: '🧱 Шаг 1: Нарисуйте стену', tool: 'wall' };
     if (!hasOpening) return { text: '🚪 Шаг 2: Нажмите «Проем» и выберите «Дверь»', tool: 'opening' };
     if (!hasDevice) return { text: '🛡️ Шаг 3: Нажмите «ОС», затем «Датчики» и выберите «Астра 512»', tool: 'os_astra512' };
     
-    // Шаг 4: Направление датчика (проверяем, есть ли повернутые датчики)
-    if (!hasDirection) return { text: '🔄 Шаг 4: Выберите направление датчика (панель внизу) и нажмите «Понятно»', tool: 'rotate' };
+    // Шаг 4: Направление
+    if (!rotateConfirmed) return { text: '🔄 Шаг 4: Выберите направление датчика (панель внизу) и нажмите «Понятно»', tool: 'rotate' };
     
+    // Шаг 5: Кабель
     if (!hasCable) return { text: '⚡ Шаг 5: Нажмите «Кабель», выберите тип и проведите линию', tool: 'cable_kspv8' };
     
     localStorage.setItem('ops_coach_done_' + currentProjectId, 'true');
@@ -525,46 +524,48 @@ function updateCoachHint() {
     
     const step = getCoachStep();
     
-    // Сброс: всё ярко, кликабельно, списки закрыты
+    // Сброс
     document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
     document.querySelectorAll('.submenu').forEach(sub => { sub.style.opacity = '1'; sub.classList.remove('show'); });
     
-    if (!step) { 
-        hintEl.style.display = 'none'; 
-        return; 
-    }
+    if (!step) { hintEl.style.display = 'none'; return; }
     
     hintEl.style.display = 'flex';
     textEl.innerText = step.text;
     document.getElementById('coachHintSkip').innerText = step.tool === 'rotate' ? 'Понятно' : 'Пропустить';
     
-    // Все тускло и без кликов
+    // Тускло и без кликов
     document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '0.2'; btn.style.pointerEvents = 'none'; });
     document.querySelectorAll('.submenu').forEach(sub => { sub.style.opacity = '0.2'; });
     
     function activate(el) { if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; } }
+    function openSub(id) { const el = document.getElementById(id); if (el) { el.classList.add('show'); el.style.opacity = '1'; } }
     
     if (step.tool === 'wall') {
         activate(document.querySelector('.main-tool[data-tool="wall"]'));
     } 
     else if (step.tool === 'opening') {
         activate(document.querySelector('.main-tool[data-group="opening"]'));
-        // Подсвечиваем "Дверь", но НЕ открываем меню (пользователь сам нажмет на Проем)
+        openSub('sub-opening');
         activate(document.querySelector('#sub-opening .sub-btn[data-tool="door"]'));
     }
     else if (step.tool === 'os_astra512') {
         activate(document.querySelector('.main-tool[data-group="os"]'));
+        openSub('sub-os');
         activate(document.getElementById('os-menu-sensors'));
+        openSub('sub-os-sensors');
         activate(document.querySelector('#sub-os-sensors .sub-btn[data-tool="os_astra512"]'));
     }
     else if (step.tool === 'cable_kspv8') {
         activate(document.querySelector('.main-tool[data-group="cable"]'));
+        openSub('sub-cable');
         activate(document.getElementById('cable-menu-os'));
+        openSub('sub-cable-os');
         activate(document.querySelector('#sub-cable-os .sub-btn[data-tool="cable_kspv8"]'));
     }
     else if (step.tool === 'rotate') {
-        // Всё разблокировано, подсвечиваем панель поворота
         document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
+        document.querySelectorAll('.submenu').forEach(sub => { sub.classList.remove('show'); });
         const rotPanel = document.getElementById('rotation-controls');
         if (rotPanel) { 
             rotPanel.style.display = 'flex'; 
@@ -573,17 +574,10 @@ function updateCoachHint() {
         }
     }
 }
-
-// Обновление превью при клике на кнопки поворота (чтобы иконка не пропадала)
-const origRotLeft = document.getElementById('rotLeftBtn');
-const origRotRight = document.getElementById('rotRightBtn');
-if (origRotLeft) { origRotLeft.addEventListener('click', () => { if (typeof updatePreview === 'function') setTimeout(updatePreview, 10); }); }
-if (origRotRight) { origRotRight.addEventListener('click', () => { if (typeof updatePreview === 'function') setTimeout(updatePreview, 10); }); }
 document.getElementById('coachHintSkip').addEventListener('click', () => {
     if (!currentProjectId) return;
     const step = getCoachStep();
     if (step && step.tool === 'rotate') {
-        // Пользователь подтвердил, что понял про направление
         localStorage.setItem('ops_coach_rotate_' + currentProjectId, 'true');
         updateCoachHint();
     } else {
