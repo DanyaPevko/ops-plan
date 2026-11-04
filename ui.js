@@ -519,8 +519,8 @@ function getCoachStep() {
     
     if (!hasCable) return { text: '⚡ Шаг 5: Нажмите «Кабель», выберите тип и проведите линию', tool: 'cable_kspv8' };
     
-    localStorage.setItem('ops_coach_done_' + currentProjectId, 'true');
-    return { text: '🎉 Готово! Вы освоили основы. Нажмите ❓ для справки.', tool: null };
+    // ФИНАЛ: Показываем кнопку "Всё понятно"
+    return { text: '🎉 Обучение завершено! Нажмите, чтобы открыть справочник.', tool: 'finish' };
 }
 
 function updateCoachHint() {
@@ -540,7 +540,15 @@ function updateCoachHint() {
     
     hintEl.style.display = 'flex';
     textEl.innerText = step.text;
-    document.getElementById('coachHintSkip').innerText = step.tool === 'rotate' ? 'Понятно' : 'Пропустить';
+    
+    // Настраиваем текст кнопки в зависимости от шага
+    if (step.tool === 'rotate') {
+        document.getElementById('coachHintSkip').innerText = 'Понятно';
+    } else if (step.tool === 'finish') {
+        document.getElementById('coachHintSkip').innerText = 'Всё понятно';
+    } else {
+        document.getElementById('coachHintSkip').innerText = 'Пропустить';
+    }
     
     // Все тускло и без кликов
     document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '0.2'; btn.style.pointerEvents = 'none'; });
@@ -583,15 +591,27 @@ function updateCoachHint() {
             if (typeof updatePreview === 'function') updatePreview(); 
         }
     }
+    else if (step.tool === 'finish') {
+        // Всё разблокировано
+        document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
+    }
 }
 
 document.getElementById('coachHintSkip').addEventListener('click', () => {
     if (!currentProjectId) return;
     const step = getCoachStep();
+    
     if (step && step.tool === 'rotate') {
         localStorage.setItem('ops_coach_rotate_' + currentProjectId, 'true');
         updateCoachHint();
-    } else {
+    } 
+    else if (step && step.tool === 'finish') {
+        // Завершаем обучение и открываем справку
+        localStorage.setItem('ops_coach_done_' + currentProjectId, 'true');
+        document.getElementById('coachHint').style.display = 'none';
+        document.getElementById('helpModal').classList.add('show');
+    } 
+    else {
         localStorage.setItem('ops_coach_skip_' + currentProjectId, 'true');
         document.querySelectorAll('.main-tool, .sub-btn').forEach(btn => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; });
         document.getElementById('coachHint').style.display = 'none';
