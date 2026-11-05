@@ -255,7 +255,7 @@ document.getElementById('textSaveBtn').addEventListener('click', () => {
 }); 
 document.getElementById('closeTextModalBtn').addEventListener('click', () => { pendingElement = null; textModal.classList.remove('show'); });
 
-// --- РЕЖИМ НОВИЧКА (ПОШАГОВЫЕ ПОДСКАЗКИ) ---
+// --- РЕЖИМ НОВИЧКА (ПОШАГОВЫЕ ПОDСКА3КИ) ---
 function getCoachStep() {
     if (!currentProjectId) return null;
     if (localStorage.getItem('ops_coach_skip_' + currentProjectId)) return null;
